@@ -197,3 +197,17 @@ export const confirmResolution = async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const getComplaintLedger = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const logs = await prisma.auditLog.findMany({
+      where: { complaintId: id },
+      orderBy: { createdAt: 'asc' }
+    });
+    return res.status(200).json({ logs });
+  } catch (error) {
+    console.error('Error fetching ledger:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { smartCreateComplaint, resolveComplaint, confirmResolution } from '../controllers/complaintController';
+import { smartCreateComplaint, resolveComplaint, confirmResolution, getComplaintLedger } from '../controllers/complaintController';
 
 const router = Router();
 
@@ -14,5 +14,9 @@ router.post('/:id/resolve', resolveComplaint);
 // Endpoint for confirming a resolution
 // POST /api/complaints/:id/confirm
 router.post('/:id/confirm', confirmResolution);
+
+// Endpoint to fetch Tamper-Evident Ledger
+// GET /api/complaints/:id/ledger
+router.get('/:id/ledger', getComplaintLedger);
 
 export default router;
