@@ -3,26 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { TiltCard } from "@/components/unlumen-ui/tilt-card";
 
-import { StackedFeatureCards, type StackedFeatureCard } from "@/components/unlumen-ui/stacked-feature-cards";
-
-const featureItems: StackedFeatureCard[] = [
-  {
-    name: "AI-Driven Routing",
-    description: "Speed is a necessity. Our platform instantly analyzes QR scans and leverages smart routing to ping the exact on-duty technician nearest to your block.",
-    icon: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-  },
-  {
-    name: "Tamper-Proof Verification",
-    description: "Accountability is built-in. Every repair requires student confirmation before it's marked complete. Immutable ledgers ensure staff logs and SLA timers can never be artificially altered.",
-    icon: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-  },
-  {
-    name: "Automated Escalation",
-    description: "From the student portal to the Dean's dashboard, everyone shares a single source of truth. Time-triggered escalations ensure ignored requests instantly bypass low-level queues.",
-    icon: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-  }
-];
-
 const LandingPage = () => {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -127,24 +107,37 @@ const LandingPage = () => {
         </div>
       </div>
 
-      {/* 3. Features Section: Stacked Feature Cards */}
-      <div style={{ padding: '8rem 4rem', background: 'var(--surface-color)', position: 'relative', zIndex: 10, color: 'var(--text-primary)' }}>
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          style={{ maxWidth: '800px', marginBottom: '5rem', margin: '0 auto 2rem auto', textAlign: 'center' }}
-        >
-          <h2 style={{ fontSize: '4rem', fontWeight: 900, marginBottom: '1.5rem', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-            Engineered for modern campuses.
-          </h2>
-          <p style={{ fontSize: '1.5rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            CampusTriage isn't just a ticketing system. It's an intelligent ecosystem designed to enforce accountability and drastically reduce resolution times.
-          </p>
-        </motion.div>
+      {/* 3. Grid Section */}
+      <div style={{ padding: '8rem 4rem', background: 'var(--surface-color)', position: 'relative', zIndex: 10 }}>
+        <h2 className="section-heading" style={{ marginBottom: '4rem', maxWidth: '800px' }}>
+          Designed for today's campus operations.
+        </h2>
         
-        <StackedFeatureCards items={featureItems} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '3rem' }}>
+          <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+            <div style={{ width: '64px', height: '64px', marginBottom: '2rem' }}>
+              <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            </div>
+            <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontWeight: 800 }}>AI-Driven Routing</h3>
+            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>Speed is a necessity. Our platform instantly analyzes QR scans and leverages smart routing to ping the exact on-duty technician nearest to your block, turning downtime into uptime.</p>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.1 }}>
+            <div style={{ width: '64px', height: '64px', marginBottom: '2rem' }}>
+              <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
+            <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontWeight: 800 }}>Tamper-Proof Verification</h3>
+            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>Accountability is built-in. Every repair requires student confirmation before it's marked complete. Immutable ledgers ensure staff logs and SLA timers can never be artificially altered.</p>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }}>
+            <div style={{ width: '64px', height: '64px', marginBottom: '2rem' }}>
+              <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontWeight: 800 }}>Automated Escalation</h3>
+            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>From the student portal to the Dean's dashboard, everyone shares a single source of truth. Time-triggered escalations ensure ignored requests instantly bypass low-level queues.</p>
+          </motion.div>
+        </div>
       </div>
 
       {/* 4. Massive Footer */}
