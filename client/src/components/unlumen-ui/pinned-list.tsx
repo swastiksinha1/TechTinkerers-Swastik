@@ -59,9 +59,9 @@ function ItemCard({
       exit="exit"
       className={cn(
         "flex items-center gap-3 rounded-2xl px-3 py-3.5",
-        "bg-muted text-muted-foreground/50",
-        "border border-transparent",
-        pinned && " bg-blue-100 dark:bg-blue-950/30",
+        "bg-white text-muted-foreground/50",
+        "border border-slate-200 shadow-sm",
+        pinned && "bg-blue-50 border-blue-300 dark:bg-blue-950/30",
       )}
     >
       <div
