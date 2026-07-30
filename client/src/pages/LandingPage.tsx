@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import { TiltCard } from "@/components/unlumen-ui/tilt-card";
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -248,18 +249,33 @@ const LandingPage = () => {
           Staff your campus with fast response, and crews you can rely on.
         </h2>
         
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '2rem', borderTop: '1px solid rgba(255,255,255,0.1)', borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '2rem 0', marginBottom: '4rem' }}>
-          <div onClick={() => navigate('/portal')} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', fontSize: '1.5rem', fontWeight: 600 }}>
-            <span>Student Portal</span>
-            <span style={{ color: '#ffffff' }}>→</span>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', padding: '2rem 0', marginBottom: '4rem' }}>
+          <div onClick={() => navigate('/portal')} style={{ cursor: 'pointer' }}>
+            <TiltCard
+              title="Student Portal"
+              description="Report an issue directly to the maintenance team using AI Triage."
+              price="Quick"
+              badgeLabel="Active"
+              imageSrc="/isometric_campus.png"
+            />
           </div>
-          <div onClick={() => navigate('/dashboard')} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', fontSize: '1.5rem', fontWeight: 600 }}>
-            <span>Technician Dashboard</span>
-            <span style={{ color: '#ffffff' }}>→</span>
+          <div onClick={() => navigate('/dashboard')} style={{ cursor: 'pointer' }}>
+            <TiltCard
+              title="Technician Dashboard"
+              description="View your assigned tasks, confirm fixes, and track your SLA."
+              price="Pro"
+              badgeLabel="Secure"
+              imageSrc="/isometric_campus.png"
+            />
           </div>
-          <div onClick={() => navigate('/map')} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', fontSize: '1.5rem', fontWeight: 600 }}>
-            <span>Campus Map</span>
-            <span style={{ color: '#ffffff' }}>→</span>
+          <div onClick={() => navigate('/map')} style={{ cursor: 'pointer' }}>
+            <TiltCard
+              title="Campus Map"
+              description="See real-time analytics and live issues across the entire campus."
+              price="Live"
+              badgeLabel="Analytics"
+              imageSrc="/isometric_campus.png"
+            />
           </div>
         </div>
 
