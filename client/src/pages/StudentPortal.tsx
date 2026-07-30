@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Sparkles, Send, CheckCircle, Camera, Star, PenTool, Bot } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { PinnedList } from "@/components/unlumen-ui/pinned-list";
+import { ShoppingBag01Icon as ShoppingBag } from "hugeicons-react";
 
 interface AIResult {
   title: string;
@@ -279,28 +281,35 @@ const StudentPortal = () => {
         {myTickets.length === 0 ? (
           <p style={{ color: 'var(--text-secondary)' }}>You have no active reports.</p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            {myTickets.map(ticket => (
-              <div key={ticket.id} style={{ padding: '2rem', background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>{ticket.title}</h3>
-                  <span style={{ padding: '0.5rem 1rem', borderRadius: '999px', fontSize: '0.85rem', fontWeight: 700, background: ticket.status === 'AWAITING_VERIFICATION' ? '#fef08a' : (ticket.status === 'RESOLVED' ? '#bbf7d0' : '#e2e8f0'), color: ticket.status === 'AWAITING_VERIFICATION' ? '#854d0e' : (ticket.status === 'RESOLVED' ? '#166534' : '#475569') }}>{ticket.status.replace('_', ' ')}</span>
-                </div>
-                <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>{ticket.description}</p>
-                <div style={{ fontSize: '0.9rem', color: '#64748b', fontFamily: 'monospace' }}>Ticket ID: {ticket.id}</div>
-                {ticket.status === 'AWAITING_VERIFICATION' && (
-                  <div style={{ marginTop: '2rem', padding: '2rem', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '8px' }}>
-                    <h4 style={{ margin: '0 0 1rem 0', color: '#0f172a' }}>Technician marked this as fixed. Please verify:</h4>
-                    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
-                      {[1, 2, 3, 4, 5].map(star => (
-                        <Star key={star} size={32} style={{ cursor: 'pointer', fill: (ratingInput[ticket.id] || 5) >= star ? '#eab308' : 'transparent', color: (ratingInput[ticket.id] || 5) >= star ? '#eab308' : '#94a3b8' }} onClick={() => setRatingInput(prev => ({ ...prev, [ticket.id]: star }))} />
-                      ))}
-                    </div>
-                    <button onClick={() => handleConfirmResolution(ticket.id)} className="glass-button" style={{ background: '#10b981', color: 'white' }}>Confirm Resolution & Award Points</button>
+          <div className="w-full max-w-2xl">
+            <PinnedList items={myTickets.map(ticket => ({
+              id: ticket.id,
+              name: ticket.title,
+              icon: <ShoppingBag size={18} />,
+              subtitle: (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ padding: '0.25rem 0.75rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 700, background: ticket.status === 'AWAITING_VERIFICATION' ? '#fef08a' : (ticket.status === 'RESOLVED' ? '#bbf7d0' : '#e2e8f0'), color: ticket.status === 'AWAITING_VERIFICATION' ? '#854d0e' : (ticket.status === 'RESOLVED' ? '#166534' : '#475569') }}>
+                      {ticket.status.replace('_', ' ')}
+                    </span>
+                    <span>· {ticket.department}</span>
                   </div>
-                )}
-              </div>
-            ))}
+                  <p style={{ color: 'var(--text-secondary)' }}>{ticket.description}</p>
+                  
+                  {ticket.status === 'AWAITING_VERIFICATION' && (
+                    <div style={{ marginTop: '1rem', padding: '1.5rem', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '8px', width: '100%' }}>
+                      <h4 style={{ margin: '0 0 1rem 0', color: '#0f172a' }}>Technician marked this as fixed. Please verify:</h4>
+                      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                        {[1, 2, 3, 4, 5].map(star => (
+                          <Star key={star} size={32} style={{ cursor: 'pointer', fill: (ratingInput[ticket.id] || 5) >= star ? '#eab308' : 'transparent', color: (ratingInput[ticket.id] || 5) >= star ? '#eab308' : '#94a3b8' }} onClick={() => setRatingInput(prev => ({ ...prev, [ticket.id]: star }))} />
+                        ))}
+                      </div>
+                      <button onClick={() => handleConfirmResolution(ticket.id)} className="glass-button" style={{ background: '#10b981', color: 'white', padding: '0.75rem 1.5rem', fontSize: '1rem' }}>Confirm Resolution & Award Points</button>
+                    </div>
+                  )}
+                </div>
+              )
+            }))} />
           </div>
         )}
       </div>
