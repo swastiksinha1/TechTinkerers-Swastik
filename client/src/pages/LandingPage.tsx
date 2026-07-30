@@ -1,7 +1,55 @@
 import React, { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform, MotionValue } from 'framer-motion';
 import { TiltCard } from "@/components/unlumen-ui/tilt-card";
+
+const ProcessStep = ({ step, index, numSteps, processScroll }: { step: { title: string, desc: string }, index: number, numSteps: number, processScroll: MotionValue<number> }) => {
+  const stepSize = 1 / numSteps;
+  const start = index * stepSize;
+  const peak = start + stepSize / 2;
+  const end = start + stepSize;
+
+  // Dramatic focus effect: Blur out, scale up, fade in
+  const opacity = useTransform(processScroll, [start, peak, end], [0, 1, 0]);
+  const y = useTransform(processScroll, [start, peak, end], [80, 0, -80]);
+  const scale = useTransform(processScroll, [start, peak, end], [0.85, 1, 0.85]);
+  const filter = useTransform(processScroll, [start, peak, end], ["blur(20px)", "blur(0px)", "blur(20px)"]);
+
+  return (
+    <motion.div 
+      style={{ 
+        position: 'absolute', 
+        opacity, 
+        y, 
+        scale,
+        filter,
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center',
+        textAlign: 'center',
+        width: '100%'
+      }}
+    >
+      <span style={{ 
+        fontWeight: 900, 
+        fontSize: '2.5rem', 
+        marginBottom: '1rem', 
+        letterSpacing: '0.1em',
+        background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent'
+      }}>
+        0{index + 1}
+      </span>
+      <h3 style={{ fontSize: '4.5rem', fontWeight: 900, marginBottom: '2rem', letterSpacing: '-0.04em', lineHeight: 1, color: '#0f172a' }}>
+        {step.title}
+      </h3>
+      <p style={{ color: '#475569', fontSize: '1.75rem', lineHeight: 1.5, maxWidth: '700px', margin: '0 auto', fontWeight: 500 }}>
+        {step.desc}
+      </p>
+    </motion.div>
+  );
+};
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -59,49 +107,22 @@ const LandingPage = () => {
       </div>
 
       {/* 2. Sticky Scroll Section: Vercel Snap Text Style */}
-      <div id="process" ref={processRef} style={{ position: 'relative', height: '600vh', zIndex: 10, background: '#ffffff' }}>
+      <div id="process" ref={processRef} style={{ position: 'relative', height: '400vh', zIndex: 10, background: '#ffffff' }}>
         <div style={{ position: 'sticky', top: 0, height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4rem', overflow: 'hidden' }}>
           
-          <div style={{ position: 'relative', width: '100%', maxWidth: '900px', height: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {stepsData.map((step, index) => {
-              const numSteps = stepsData.length;
-              const stepSize = 1 / numSteps;
-              const start = index * stepSize;
-              const peak = start + stepSize / 2;
-              const end = start + stepSize;
+          {/* Subtle background glow that pulses */}
+          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '60vw', height: '60vw', background: 'radial-gradient(circle, rgba(59,130,246,0.03) 0%, rgba(255,255,255,0) 70%)', borderRadius: '50%', pointerEvents: 'none' }} />
 
-              // The opacity peaks at the center of the step's scroll range, and fades out by the edges
-              const opacity = useTransform(processScroll, [start, peak, end], [0, 1, 0]);
-              // The text drifts up slightly as you scroll down
-              const y = useTransform(processScroll, [start, peak, end], [40, 0, -40]);
-              const scale = useTransform(processScroll, [start, peak, end], [0.95, 1, 0.95]);
-
-              return (
-                <motion.div 
-                  key={index}
-                  style={{ 
-                    position: 'absolute', 
-                    opacity, 
-                    y, 
-                    scale,
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    alignItems: 'center',
-                    textAlign: 'center' 
-                  }}
-                >
-                  <span style={{ fontWeight: 800, fontSize: '2rem', color: 'var(--primary-color)', marginBottom: '1.5rem', letterSpacing: '0.1em' }}>
-                    0{index + 1}
-                  </span>
-                  <h3 style={{ fontSize: '4.5rem', fontWeight: 900, marginBottom: '1.5rem', letterSpacing: '-0.03em', lineHeight: 1.1, color: '#0f172a' }}>
-                    {step.title}
-                  </h3>
-                  <p style={{ color: '#475569', fontSize: '1.5rem', lineHeight: 1.6, maxWidth: '600px', margin: '0 auto' }}>
-                    {step.desc}
-                  </p>
-                </motion.div>
-              );
-            })}
+          <div style={{ position: 'relative', width: '100%', maxWidth: '1000px', height: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {stepsData.map((step, index) => (
+              <ProcessStep 
+                key={index} 
+                step={step} 
+                index={index} 
+                numSteps={stepsData.length} 
+                processScroll={processScroll} 
+              />
+            ))}
           </div>
 
         </div>
