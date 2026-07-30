@@ -11,14 +11,14 @@ function createLedgerHash(complaintId: string, action: string, details: string, 
 
 export const smartCreateComplaint = async (req: Request, res: Response) => {
   try {
-    const { text, reporterId, locationId } = req.body;
+    const { text, reporterId, locationId, imageBase64 } = req.body;
 
     if (!text || !reporterId || !locationId) {
       return res.status(400).json({ error: 'Missing required fields (text, reporterId, locationId)' });
     }
 
-    // 1. Analyze unstructured text with Gemini AI
-    const aiAnalysis = await analyzeComplaint(text);
+    // 1. Analyze unstructured text (and photo if present) with Gemini AI
+    const aiAnalysis = await analyzeComplaint(text, imageBase64);
 
     // 2. Ensure User and Location exist to satisfy Foreign Key constraints
     await prisma.user.upsert({

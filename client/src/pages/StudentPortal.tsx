@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Send, CheckCircle } from 'lucide-react';
+import { Sparkles, Send, CheckCircle, Camera } from 'lucide-react';
 
 interface AIResult {
   title: string;
@@ -10,8 +10,22 @@ interface AIResult {
 
 const StudentPortal = () => {
   const [complaintText, setComplaintText] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<AIResult | null>(null);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,6 +40,7 @@ const StudentPortal = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: complaintText,
+          imageBase64: imagePreview, // Send the base64 data to Gemini Vision
           reporterId: 'stu_123', // Mock ID for now
           locationId: 'loc_abc', // Mock ID for now
         }),
@@ -54,27 +69,55 @@ const StudentPortal = () => {
         </h2>
         
         <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-          Just describe the problem in your own words. Our AI will automatically figure out the department, urgency, and notify the right team instantly.
+          Describe the problem or upload a photo! Our Multimodal AI will automatically figure out the department, urgency, and notify the right team instantly.
         </p>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <textarea
             className="glass-input"
-            rows={5}
+            rows={4}
             placeholder="e.g., The fan in room 101 is making a weird sparking noise and smells like smoke..."
             value={complaintText}
             onChange={(e) => setComplaintText(e.target.value)}
             disabled={isSubmitting}
             required
           />
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <label className="glass-button" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', flex: 1, justifyContent: 'center', background: 'rgba(255,255,255,0.05)' }}>
+              <Camera size={18} />
+              {imageFile ? 'Change Photo' : 'Attach Photo (Optional)'}
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={handleImageChange} 
+                style={{ display: 'none' }}
+                disabled={isSubmitting}
+              />
+            </label>
+          </div>
+
+          {imagePreview && (
+            <div style={{ position: 'relative', width: '100%', height: '200px', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <img src={imagePreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <button 
+                type="button"
+                onClick={() => { setImageFile(null); setImagePreview(null); }}
+                style={{ position: 'absolute', top: '8px', right: '8px', background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none', borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
           <button 
             type="submit" 
             className="glass-button" 
             disabled={isSubmitting || !complaintText}
-            style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}
+            style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}
           >
             {isSubmitting ? (
-              <span className="animate-pulse">AI is analyzing...</span>
+              <span className="animate-pulse">Gemini Vision is analyzing...</span>
             ) : (
               <>Submit to AI Triage <Send size={18} /></>
             )}
