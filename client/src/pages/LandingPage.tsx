@@ -5,14 +5,15 @@ import { TiltCard } from "@/components/unlumen-ui/tilt-card";
 
 const ProcessStep = ({ step, index, numSteps, processScroll }: { step: { title: string, desc: string }, index: number, numSteps: number, processScroll: MotionValue<number> }) => {
   const stepSize = 1 / numSteps;
-  const start = index * stepSize;
-  const peak = start + stepSize / 2;
-  const end = start + stepSize;
+  const peak = (index + 0.5) * stepSize;
+  // Widen the start and end by 2 stepSizes so 3 items (N-1, N, N+1) are visible at once
+  const start = peak - (2 * stepSize);
+  const end = peak + (2 * stepSize);
 
-  // Dramatic focus effect: Blur out, scale up, fade in
+  // Smooth overlap: Y travels a larger distance so they stack nicely without clipping
   const opacity = useTransform(processScroll, [start, peak, end], [0, 1, 0]);
-  const y = useTransform(processScroll, [start, peak, end], [80, 0, -80]);
-  const scale = useTransform(processScroll, [start, peak, end], [0.85, 1, 0.85]);
+  const y = useTransform(processScroll, [start, peak, end], [350, 0, -350]);
+  const scale = useTransform(processScroll, [start, peak, end], [0.7, 1, 0.7]);
   const filter = useTransform(processScroll, [start, peak, end], ["blur(8px)", "blur(0px)", "blur(8px)"]);
 
   return (
@@ -32,7 +33,7 @@ const ProcessStep = ({ step, index, numSteps, processScroll }: { step: { title: 
     >
       <span style={{ 
         fontWeight: 900, 
-        fontSize: '2.5rem', 
+        fontSize: '2rem', 
         marginBottom: '1rem', 
         letterSpacing: '0.1em',
         background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
@@ -41,10 +42,10 @@ const ProcessStep = ({ step, index, numSteps, processScroll }: { step: { title: 
       }}>
         0{index + 1}
       </span>
-      <h3 style={{ fontSize: '4.5rem', fontWeight: 900, marginBottom: '2rem', letterSpacing: '-0.04em', lineHeight: 1, color: '#0f172a' }}>
+      <h3 style={{ fontSize: '3.5rem', fontWeight: 900, marginBottom: '1.5rem', letterSpacing: '-0.04em', lineHeight: 1, color: '#0f172a' }}>
         {step.title}
       </h3>
-      <p style={{ color: '#475569', fontSize: '1.75rem', lineHeight: 1.5, maxWidth: '700px', margin: '0 auto', fontWeight: 500 }}>
+      <p style={{ color: '#475569', fontSize: '1.25rem', lineHeight: 1.5, maxWidth: '600px', margin: '0 auto', fontWeight: 500 }}>
         {step.desc}
       </p>
     </motion.div>
