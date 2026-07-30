@@ -107,35 +107,97 @@ const LandingPage = () => {
         </div>
       </div>
 
-      {/* 3. Grid Section */}
-      <div style={{ padding: '8rem 4rem', background: 'var(--surface-color)', position: 'relative', zIndex: 10 }}>
-        <h2 className="section-heading" style={{ marginBottom: '4rem', maxWidth: '800px' }}>
-          Designed for today's campus operations.
-        </h2>
+      {/* 3. Features Section: Animated Grid */}
+      <div style={{ padding: '8rem 4rem', background: '#020617', position: 'relative', zIndex: 10, color: '#f8fafc' }}>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          style={{ maxWidth: '800px', marginBottom: '5rem' }}
+        >
+          <h2 style={{ fontSize: '3.5rem', fontWeight: 900, marginBottom: '1.5rem', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+            Engineered for modern campuses.
+          </h2>
+          <p style={{ fontSize: '1.25rem', color: '#94a3b8', lineHeight: 1.6 }}>
+            CampusTriage isn't just a ticketing system. It's an intelligent ecosystem designed to enforce accountability and drastically reduce resolution times across hostels and academic blocks.
+          </p>
+        </motion.div>
         
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '3rem' }}>
-          <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-            <div style={{ width: '64px', height: '64px', marginBottom: '2rem' }}>
-              <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem' }}>
+          {/* Card 1: AI Routing */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }} 
+            whileInView={{ opacity: 1, y: 0 }} 
+            viewport={{ once: true, margin: "-50px" }} 
+            transition={{ duration: 0.6, delay: 0.1 }}
+            whileHover={{ y: -8, transition: { duration: 0.2 } }}
+            style={{ 
+              background: 'rgba(30, 41, 59, 0.4)', 
+              border: '1px solid rgba(51, 65, 85, 0.5)', 
+              borderRadius: '24px', 
+              padding: '3rem 2.5rem',
+              backdropFilter: 'blur(12px)',
+              cursor: 'default'
+            }}
+          >
+            <div style={{ width: '56px', height: '56px', marginBottom: '2rem', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.1)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             </div>
-            <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontWeight: 800 }}>Rapid Activation</h3>
-            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>We believe speed is a skill. Our platform uses machine learning to turn reporting into instant logistics, deploying a precisely matched workforce the moment demand strikes.</p>
+            <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontWeight: 800, letterSpacing: '-0.01em' }}>AI-Driven Routing</h3>
+            <p style={{ color: '#94a3b8', lineHeight: 1.6, fontSize: '1.05rem' }}>
+              Speed is a necessity. Our platform instantly analyzes QR scans and leverages smart routing to ping the exact on-duty technician nearest to your block, turning downtime into uptime.
+            </p>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.1 }}>
-            <div style={{ width: '64px', height: '64px', marginBottom: '2rem' }}>
-              <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          {/* Card 2: Tamper Proof */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }} 
+            whileInView={{ opacity: 1, y: 0 }} 
+            viewport={{ once: true, margin: "-50px" }} 
+            transition={{ duration: 0.6, delay: 0.2 }}
+            whileHover={{ y: -8, transition: { duration: 0.2 } }}
+            style={{ 
+              background: 'rgba(30, 41, 59, 0.4)', 
+              border: '1px solid rgba(51, 65, 85, 0.5)', 
+              borderRadius: '24px', 
+              padding: '3rem 2.5rem',
+              backdropFilter: 'blur(12px)',
+              cursor: 'default'
+            }}
+          >
+            <div style={{ width: '56px', height: '56px', marginBottom: '2rem', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
-            <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontWeight: 800 }}>Rigorous Selection</h3>
-            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>Geography is a core metric. Our engine uses AI to find and contact qualified talent within defined radii, securing top local contractors first.</p>
+            <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontWeight: 800, letterSpacing: '-0.01em' }}>Tamper-Proof Verification</h3>
+            <p style={{ color: '#94a3b8', lineHeight: 1.6, fontSize: '1.05rem' }}>
+              Accountability is built-in. Every repair requires student confirmation before it's marked complete. Immutable ledgers ensure staff logs and SLA timers can never be artificially altered.
+            </p>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }}>
-            <div style={{ width: '64px', height: '64px', marginBottom: '2rem' }}>
-              <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          {/* Card 3: Visibility */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }} 
+            whileInView={{ opacity: 1, y: 0 }} 
+            viewport={{ once: true, margin: "-50px" }} 
+            transition={{ duration: 0.6, delay: 0.3 }}
+            whileHover={{ y: -8, transition: { duration: 0.2 } }}
+            style={{ 
+              background: 'rgba(30, 41, 59, 0.4)', 
+              border: '1px solid rgba(51, 65, 85, 0.5)', 
+              borderRadius: '24px', 
+              padding: '3rem 2.5rem',
+              backdropFilter: 'blur(12px)',
+              cursor: 'default'
+            }}
+          >
+            <div style={{ width: '56px', height: '56px', marginBottom: '2rem', color: '#f59e0b', background: 'rgba(245, 158, 11, 0.1)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             </div>
-            <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontWeight: 800 }}>100% Verified</h3>
-            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>We use a Zero-Trust verification model with secure API integrations to run automated background checks, blocking dispatch access until fully cleared.</p>
+            <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontWeight: 800, letterSpacing: '-0.01em' }}>Automated Escalation</h3>
+            <p style={{ color: '#94a3b8', lineHeight: 1.6, fontSize: '1.05rem' }}>
+              From the student portal to the Dean's dashboard, everyone shares a single source of truth. Time-triggered escalations ensure ignored requests instantly bypass low-level queues.
+            </p>
           </motion.div>
         </div>
       </div>
