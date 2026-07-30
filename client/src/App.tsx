@@ -4,6 +4,7 @@ import StudentPortal from './pages/StudentPortal';
 import TechnicianDashboard from './pages/TechnicianDashboard';
 import CampusMap from './pages/CampusMap';
 import LandingPage from './pages/LandingPage';
+import PublicFeed from './pages/PublicFeed';
 
 function AppContent() {
   const location = useLocation();
@@ -33,6 +34,9 @@ function AppContent() {
             <NavLink to="/map" className={({ isActive }) => isActive ? "active" : ""}>
               Campus Heatmap
             </NavLink>
+            <NavLink to="/feed" className={({ isActive }) => isActive ? "active" : ""}>
+              Public Feed
+            </NavLink>
           </div>
         </nav>
 
@@ -41,6 +45,7 @@ function AppContent() {
             <Route path="/portal" element={<StudentPortal />} />
             <Route path="/dashboard" element={<TechnicianDashboard />} />
             <Route path="/map" element={<CampusMap />} />
+            <Route path="/feed" element={<PublicFeed />} />
           </Routes>
         </main>
       </div>

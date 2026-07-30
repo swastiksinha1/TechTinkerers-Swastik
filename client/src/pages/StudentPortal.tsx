@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, Send, CheckCircle, Camera, Star, PenTool, Bot } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 interface AIResult {
   title: string;
@@ -153,11 +154,16 @@ const StudentPortal = () => {
   return (
     <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: "easeOut" }} style={{ maxWidth: '800px', margin: '0 auto', paddingTop: '4rem', paddingBottom: '4rem' }}>
       
-      <div style={{ marginBottom: '3rem' }}>
-        <h2 className="section-heading" style={{ marginBottom: '1rem' }}>Report an Issue.</h2>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '1.25rem', lineHeight: 1.6, maxWidth: '600px' }}>
-          Choose Smart Triage to let our AI do the work, or switch to Manual if you want to specify everything yourself.
-        </p>
+      <div style={{ marginBottom: '3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h2 className="section-heading" style={{ marginBottom: '1rem' }}>Report an Issue.</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1.25rem', lineHeight: 1.6, maxWidth: '600px' }}>
+            Choose Smart Triage to let our AI do the work, or switch to Manual if you want to specify everything yourself.
+          </p>
+        </div>
+        <Link to="/feed" style={{ textDecoration: 'none', background: '#e0f2fe', color: '#0369a1', padding: '1rem 1.5rem', borderRadius: '8px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          View Community Feed →
+        </Link>
       </div>
 
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', background: '#f1f5f9', padding: '0.5rem', borderRadius: '12px' }}>

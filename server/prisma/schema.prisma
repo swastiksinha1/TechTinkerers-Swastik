@@ -70,6 +70,7 @@ model Complaint {
   department  String?         // AI will categorize this automatically
   aiAnalysis  Json?           // Storing AI reasoning/metadata
   photoUrl    String?
+  upvotes     Int             @default(0) // Public upvotes for this issue
   rating      Int?            // 1-5 rating from student upon verification
   
   // SLA & Timers

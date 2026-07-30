@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { smartCreateComplaint, manualCreateComplaint, resolveComplaint, confirmResolution, getComplaintLedger, getStudentComplaints, getComplaint } from '../controllers/complaintController';
+import { smartCreateComplaint, manualCreateComplaint, resolveComplaint, confirmResolution, getComplaintLedger, getStudentComplaints, getComplaint, getPublicFeed, upvoteComplaint } from '../controllers/complaintController';
 
 const router = Router();
 
@@ -10,6 +10,14 @@ router.post('/smart', smartCreateComplaint);
 // Endpoint for manual ticket submission
 // POST /api/complaints/manual
 router.post('/manual', manualCreateComplaint);
+
+// Endpoint for public feed
+// GET /api/complaints/public
+router.get('/public', getPublicFeed);
+
+// Endpoint to upvote a complaint
+// POST /api/complaints/:id/upvote
+router.post('/:id/upvote', upvoteComplaint);
 
 // Endpoint for resolving a complaint and awarding karma points
 // POST /api/complaints/:id/resolve

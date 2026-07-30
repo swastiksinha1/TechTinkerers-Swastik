@@ -78,6 +78,7 @@ export const smartCreateComplaint = async (req: Request, res: Response) => {
         assigneeId, // Instant Routing
         locationId,
         aiAnalysis: JSON.stringify(aiAnalysis),
+        photoUrl: imageBase64 || null,
         escalationLevel: 0, // Starts at Technician
       },
     });
@@ -106,7 +107,7 @@ export const smartCreateComplaint = async (req: Request, res: Response) => {
 
 export const manualCreateComplaint = async (req: Request, res: Response) => {
   try {
-    const { title, description, department, priority, reporterId, locationId } = req.body;
+    const { title, description, department, priority, reporterId, locationId, imageBase64 } = req.body;
 
     if (!title || !description || !department || !priority || !reporterId || !locationId) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -144,7 +145,7 @@ export const manualCreateComplaint = async (req: Request, res: Response) => {
     // 4. Save ticket to DB
     const complaint = await prisma.complaint.create({
       data: {
-        title, description, department, priority, status: 'ASSIGNED', deadline, reporterId, assigneeId, locationId, escalationLevel: 0,
+        title, description, department, priority, status: 'ASSIGNED', deadline, reporterId, assigneeId, locationId, escalationLevel: 0, photoUrl: imageBase64 || null,
       },
     });
 
@@ -311,6 +312,35 @@ export const getComplaint = async (req: Request, res: Response) => {
     return res.status(200).json({ complaint });
   } catch (error) {
     console.error('Error fetching complaint:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getPublicFeed = async (req: Request, res: Response) => {
+  try {
+    const complaints = await prisma.complaint.findMany({
+      where: {
+        status: { not: 'CLOSED' }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    return res.status(200).json({ complaints });
+  } catch (error) {
+    console.error('Error fetching public feed:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const upvoteComplaint = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const updatedComplaint = await prisma.complaint.update({
+      where: { id },
+      data: { upvotes: { increment: 1 } }
+    });
+    return res.status(200).json({ complaint: updatedComplaint });
+  } catch (error) {
+    console.error('Error upvoting complaint:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
