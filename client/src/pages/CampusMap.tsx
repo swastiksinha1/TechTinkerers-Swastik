@@ -1,19 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
-import { AlertCircle, CheckCircle, Info } from 'lucide-react';
+import React, { useState } from 'react';
+import Map, { Marker, Popup, Layer, Source } from 'react-map-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import { AlertCircle, CheckCircle, Info, MapPin } from 'lucide-react';
 
-// Fix for default marker icons in React Leaflet
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
 // Real images from the internet (Unsplash placeholders representing college blocks)
-// You can replace these URLs with exact VIT Bhopal image URLs!
+// Replace these URLs with exact VIT Bhopal image URLs!
 const images = {
   boys: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=400',
   girls: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&q=80&w=400',
@@ -37,8 +30,32 @@ const locations = [
   { id: 'e1', name: 'Main Campus Eatery', type: 'Eatery', lat: 23.0752, lng: 76.8485, img: images.eatery },
 ];
 
+const buildingLayer: any = {
+  id: '3d-buildings',
+  source: 'composite',
+  'source-layer': 'building',
+  filter: ['==', 'extrude', 'true'],
+  type: 'fill-extrusion',
+  minzoom: 15,
+  paint: {
+    'fill-extrusion-color': '#2a3b5c',
+    'fill-extrusion-height': [
+      'interpolate', ['linear'], ['zoom'],
+      15, 0,
+      15.05, ['get', 'height']
+    ],
+    'fill-extrusion-base': [
+      'interpolate', ['linear'], ['zoom'],
+      15, 0,
+      15.05, ['get', 'min_height']
+    ],
+    'fill-extrusion-opacity': 0.8
+  }
+};
+
 const CampusMap = () => {
-  // Simulate active complaints for the demo (Red = Critical, Yellow = Medium, Green = Clear)
+  const [popupInfo, setPopupInfo] = useState<any>(null);
+
   const getHealthStatus = (id: string) => {
     if (id === 'b3' || id === 'a1') return 'CRITICAL';
     if (id === 'g1' || id === 'e1') return 'MEDIUM';
@@ -51,12 +68,34 @@ const CampusMap = () => {
     return '#10b981'; // Green
   };
 
+  if (!MAPBOX_TOKEN || MAPBOX_TOKEN === 'paste_your_free_mapbox_token_here') {
+    return (
+      <div className="animate-slide-up" style={{ padding: '2rem', textAlign: 'center' }}>
+        <div className="glass-panel" style={{ padding: '3rem', maxWidth: '600px', margin: '0 auto' }}>
+          <AlertCircle size={48} color="var(--warning)" style={{ margin: '0 auto 1rem' }} />
+          <h2>Mapbox Token Required</h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+            To render the high-performance 3D buildings, you need to add your free Mapbox API token.
+          </p>
+          <div style={{ textAlign: 'left', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px' }}>
+            <ol>
+              <li>Go to <strong>mapbox.com</strong> and create a free account.</li>
+              <li>Copy your Default Public Token (starts with <code>pk.</code>).</li>
+              <li>Open <code>client/.env</code> and paste it there.</li>
+              <li>Restart the frontend server.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="animate-slide-up" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h2 style={{ margin: 0 }}>VIT Bhopal Campus Heatmap</h2>
-          <p style={{ color: 'var(--text-secondary)', margin: '0.5rem 0 0 0' }}>Live complaint tracking across 13 blocks</p>
+          <h2 style={{ margin: 0 }}>VIT Bhopal 3D Command Center</h2>
+          <p style={{ color: 'var(--text-secondary)', margin: '0.5rem 0 0 0' }}>Hold Right-Click and drag to rotate the 3D map</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <span style={{ color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><CheckCircle size={16}/> Clear</span>
@@ -66,54 +105,78 @@ const CampusMap = () => {
       </div>
 
       <div className="glass-panel" style={{ height: '70vh', width: '100%', overflow: 'hidden', borderRadius: '16px' }}>
-        <MapContainer 
-          center={[23.0755, 76.8497]} 
-          zoom={16} 
-          style={{ height: '100%', width: '100%' }}
+        <Map
+          initialViewState={{
+            longitude: 76.8497,
+            latitude: 23.0755,
+            zoom: 16,
+            pitch: 60,
+            bearing: -20
+          }}
+          mapStyle="mapbox://styles/mapbox/dark-v11"
+          mapboxAccessToken={MAPBOX_TOKEN}
         >
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          />
-          
+          <Layer {...buildingLayer} />
+
           {locations.map((loc) => {
             const status = getHealthStatus(loc.id);
             const color = getColor(status);
             
             return (
-              <React.Fragment key={loc.id}>
-                {/* Glowing ring for health status */}
-                <CircleMarker 
-                  center={[loc.lat, loc.lng]} 
-                  radius={40} 
-                  pathOptions={{ color, fillColor: color, fillOpacity: 0.1, weight: 2 }}
-                />
-                
-                {/* Main Marker */}
-                <Marker position={[loc.lat, loc.lng]}>
-                  <Popup className="custom-popup">
-                    <div style={{ width: '220px' }}>
-                      <img 
-                        src={loc.img} 
-                        alt={loc.name} 
-                        style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '8px', marginBottom: '8px' }} 
-                      />
-                      <h3 style={{ margin: '0 0 4px 0', fontSize: '1.1rem', color: '#1f2937' }}>{loc.name}</h3>
-                      <p style={{ margin: 0, fontSize: '0.9rem', color: '#4b5563', fontWeight: 'bold' }}>
-                        Status: <span style={{ color }}>{status}</span>
-                      </p>
-                      {status !== 'CLEAR' && (
-                        <p style={{ margin: '8px 0 0 0', fontSize: '0.85rem', color: '#6b7280' }}>
-                          Active complaints detected. Technician required.
-                        </p>
-                      )}
-                    </div>
-                  </Popup>
-                </Marker>
-              </React.Fragment>
+              <Marker 
+                key={loc.id} 
+                longitude={loc.lng} 
+                latitude={loc.lat} 
+                anchor="bottom"
+                onClick={e => {
+                  e.originalEvent.stopPropagation();
+                  setPopupInfo({ ...loc, status, color });
+                }}
+              >
+                <div style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <div style={{ 
+                    width: '40px', height: '40px', 
+                    background: `${color}33`, // 20% opacity
+                    border: `2px solid ${color}`,
+                    borderRadius: '50%',
+                    display: 'flex', justifyContent: 'center', alignItems: 'center',
+                    boxShadow: `0 0 15px ${color}`
+                  }}>
+                    <MapPin color={color} size={24} />
+                  </div>
+                </div>
+              </Marker>
             );
           })}
-        </MapContainer>
+
+          {popupInfo && (
+            <Popup
+              anchor="top"
+              longitude={popupInfo.lng}
+              latitude={popupInfo.lat}
+              onClose={() => setPopupInfo(null)}
+              closeOnClick={false}
+              className="dark-popup"
+            >
+              <div style={{ width: '220px', padding: '0.5rem', background: '#1e293b', color: 'white', borderRadius: '8px' }}>
+                <img 
+                  src={popupInfo.img} 
+                  alt={popupInfo.name} 
+                  style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '4px', marginBottom: '8px' }} 
+                />
+                <h3 style={{ margin: '0 0 4px 0', fontSize: '1.1rem' }}>{popupInfo.name}</h3>
+                <p style={{ margin: 0, fontSize: '0.9rem', color: '#94a3b8', fontWeight: 'bold' }}>
+                  Status: <span style={{ color: popupInfo.color }}>{popupInfo.status}</span>
+                </p>
+                {popupInfo.status !== 'CLEAR' && (
+                  <p style={{ margin: '8px 0 0 0', fontSize: '0.85rem', color: '#cbd5e1' }}>
+                    Active complaints detected. Technician required.
+                  </p>
+                )}
+              </div>
+            </Popup>
+          )}
+        </Map>
       </div>
     </div>
   );
