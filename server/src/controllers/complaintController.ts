@@ -322,6 +322,11 @@ export const getPublicFeed = async (req: Request, res: Response) => {
       where: {
         status: { not: 'CLOSED' }
       },
+      include: {
+        userUpvotes: {
+          select: { userId: true }
+        }
+      },
       orderBy: { createdAt: 'desc' }
     });
     return res.status(200).json({ complaints });
@@ -334,11 +339,41 @@ export const getPublicFeed = async (req: Request, res: Response) => {
 export const upvoteComplaint = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const updatedComplaint = await prisma.complaint.update({
-      where: { id },
-      data: { upvotes: { increment: 1 } }
+    const { userId } = req.body; // Expect userId from frontend
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
+
+    // Check if the user already upvoted this complaint
+    const existingUpvote = await prisma.upvote.findUnique({
+      where: {
+        userId_complaintId: {
+          userId,
+          complaintId: id,
+        }
+      }
     });
-    return res.status(200).json({ complaint: updatedComplaint });
+
+    if (existingUpvote) {
+      return res.status(400).json({ error: 'You have already upvoted this issue.' });
+    }
+
+    // Transaction to ensure atomicity
+    const [upvote, updatedComplaint] = await prisma.$transaction([
+      prisma.upvote.create({
+        data: {
+          userId,
+          complaintId: id,
+        }
+      }),
+      prisma.complaint.update({
+        where: { id },
+        data: { upvotes: { increment: 1 } }
+      })
+    ]);
+
+    return res.status(200).json({ complaint: updatedComplaint, message: 'Upvoted successfully!' });
   } catch (error) {
     console.error('Error upvoting complaint:', error);
     return res.status(500).json({ error: 'Internal server error' });

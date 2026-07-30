@@ -7,6 +7,9 @@ const PublicFeed = () => {
   const [complaints, setComplaints] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Hardcoded for demo, normally this would come from Auth Context
+  const currentUserId = 'stu_123'; 
+
   const fetchFeed = async () => {
     try {
       const response = await fetch('/api/complaints/public');
@@ -29,12 +32,36 @@ const PublicFeed = () => {
 
   const handleUpvote = async (id: string) => {
     // Optimistic UI update
-    setComplaints(prev => prev.map(c => c.id === id ? { ...c, upvotes: (c.upvotes || 0) + 1 } : c));
+    setComplaints(prev => prev.map(c => {
+      if (c.id === id) {
+        // Prevent double upvote locally
+        const alreadyUpvoted = c.userUpvotes?.some((u: any) => u.userId === currentUserId);
+        if (alreadyUpvoted) return c;
+        
+        return { 
+          ...c, 
+          upvotes: (c.upvotes || 0) + 1,
+          userUpvotes: [...(c.userUpvotes || []), { userId: currentUserId }]
+        };
+      }
+      return c;
+    }));
+
     try {
-      await fetch(`/api/complaints/${id}/upvote`, { method: 'POST' });
+      const response = await fetch(`/api/complaints/${id}/upvote`, { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUserId })
+      });
+      
+      if (!response.ok) {
+        const errData = await response.json();
+        alert(errData.error || 'Failed to upvote');
+        fetchFeed(); // Revert on failure
+      }
     } catch (e) {
       console.error(e);
-      // If it fails, we could revert the optimistic update here
+      fetchFeed();
     }
   };
 
@@ -90,15 +117,20 @@ const PublicFeed = () => {
                       <MapPin size={16} /> Room {complaint.locationId.replace('loc_', '')}
                     </div>
                     
-                    <motion.button 
-                      whileHover={{ scale: 1.05 }} 
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handleUpvote(complaint.id)}
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f8fafc', border: '1px solid #cbd5e1', padding: '0.5rem 1rem', borderRadius: '999px', color: '#3b82f6', fontWeight: 800, cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}
-                    >
-                      <ArrowUp size={18} strokeWidth={3} />
-                      {complaint.upvotes || 0}
-                    </motion.button>
+                    {(() => {
+                      const hasUpvoted = complaint.userUpvotes?.some((u: any) => u.userId === currentUserId);
+                      return (
+                        <motion.button 
+                          whileHover={hasUpvoted ? {} : { scale: 1.05 }} 
+                          whileTap={hasUpvoted ? {} : { scale: 0.95 }}
+                          onClick={() => !hasUpvoted && handleUpvote(complaint.id)}
+                          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: hasUpvoted ? '#3b82f6' : '#f8fafc', border: `1px solid ${hasUpvoted ? '#2563eb' : '#cbd5e1'}`, padding: '0.5rem 1rem', borderRadius: '999px', color: hasUpvoted ? '#ffffff' : '#3b82f6', fontWeight: 800, cursor: hasUpvoted ? 'default' : 'pointer', boxShadow: hasUpvoted ? '0 4px 6px -1px rgba(59, 130, 246, 0.4)' : '0 2px 4px rgba(0,0,0,0.05)' }}
+                        >
+                          <ArrowUp size={18} strokeWidth={3} />
+                          {complaint.upvotes || 0}
+                        </motion.button>
+                      );
+                    })()}
                   </div>
                 </div>
               </motion.div>
