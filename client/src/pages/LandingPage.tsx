@@ -108,7 +108,7 @@ const LandingPage = () => {
       </div>
 
       {/* 3. Features Section: Animated Grid */}
-      <div style={{ padding: '8rem 4rem', background: '#020617', position: 'relative', zIndex: 10, color: '#f8fafc' }}>
+      <div style={{ padding: '8rem 4rem', background: 'var(--surface-color)', position: 'relative', zIndex: 10, color: 'var(--text-primary)' }}>
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -119,7 +119,7 @@ const LandingPage = () => {
           <h2 style={{ fontSize: '3.5rem', fontWeight: 900, marginBottom: '1.5rem', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
             Engineered for modern campuses.
           </h2>
-          <p style={{ fontSize: '1.25rem', color: '#94a3b8', lineHeight: 1.6 }}>
+          <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
             CampusTriage isn't just a ticketing system. It's an intelligent ecosystem designed to enforce accountability and drastically reduce resolution times across hostels and academic blocks.
           </p>
         </motion.div>
@@ -131,21 +131,21 @@ const LandingPage = () => {
             whileInView={{ opacity: 1, y: 0 }} 
             viewport={{ once: true, margin: "-50px" }} 
             transition={{ duration: 0.6, delay: 0.1 }}
-            whileHover={{ y: -8, transition: { duration: 0.2 } }}
+            whileHover={{ y: -8, boxShadow: '0 20px 40px -15px rgba(0,0,0,0.05)', transition: { duration: 0.2 } }}
             style={{ 
-              background: 'rgba(30, 41, 59, 0.4)', 
-              border: '1px solid rgba(51, 65, 85, 0.5)', 
+              background: 'var(--bg-color)', 
+              border: '1px solid var(--border-color)', 
               borderRadius: '24px', 
               padding: '3rem 2.5rem',
-              backdropFilter: 'blur(12px)',
-              cursor: 'default'
+              cursor: 'default',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02)'
             }}
           >
-            <div style={{ width: '56px', height: '56px', marginBottom: '2rem', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.1)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: '56px', height: '56px', marginBottom: '2rem', color: '#0ea5e9', background: '#e0f2fe', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             </div>
             <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontWeight: 800, letterSpacing: '-0.01em' }}>AI-Driven Routing</h3>
-            <p style={{ color: '#94a3b8', lineHeight: 1.6, fontSize: '1.05rem' }}>
+            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, fontSize: '1.05rem' }}>
               Speed is a necessity. Our platform instantly analyzes QR scans and leverages smart routing to ping the exact on-duty technician nearest to your block, turning downtime into uptime.
             </p>
           </motion.div>
@@ -156,21 +156,21 @@ const LandingPage = () => {
             whileInView={{ opacity: 1, y: 0 }} 
             viewport={{ once: true, margin: "-50px" }} 
             transition={{ duration: 0.6, delay: 0.2 }}
-            whileHover={{ y: -8, transition: { duration: 0.2 } }}
+            whileHover={{ y: -8, boxShadow: '0 20px 40px -15px rgba(0,0,0,0.05)', transition: { duration: 0.2 } }}
             style={{ 
-              background: 'rgba(30, 41, 59, 0.4)', 
-              border: '1px solid rgba(51, 65, 85, 0.5)', 
+              background: 'var(--bg-color)', 
+              border: '1px solid var(--border-color)', 
               borderRadius: '24px', 
               padding: '3rem 2.5rem',
-              backdropFilter: 'blur(12px)',
-              cursor: 'default'
+              cursor: 'default',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02)'
             }}
           >
-            <div style={{ width: '56px', height: '56px', marginBottom: '2rem', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: '56px', height: '56px', marginBottom: '2rem', color: '#10b981', background: '#d1fae5', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
             <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontWeight: 800, letterSpacing: '-0.01em' }}>Tamper-Proof Verification</h3>
-            <p style={{ color: '#94a3b8', lineHeight: 1.6, fontSize: '1.05rem' }}>
+            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, fontSize: '1.05rem' }}>
               Accountability is built-in. Every repair requires student confirmation before it's marked complete. Immutable ledgers ensure staff logs and SLA timers can never be artificially altered.
             </p>
           </motion.div>
@@ -181,21 +181,21 @@ const LandingPage = () => {
             whileInView={{ opacity: 1, y: 0 }} 
             viewport={{ once: true, margin: "-50px" }} 
             transition={{ duration: 0.6, delay: 0.3 }}
-            whileHover={{ y: -8, transition: { duration: 0.2 } }}
+            whileHover={{ y: -8, boxShadow: '0 20px 40px -15px rgba(0,0,0,0.05)', transition: { duration: 0.2 } }}
             style={{ 
-              background: 'rgba(30, 41, 59, 0.4)', 
-              border: '1px solid rgba(51, 65, 85, 0.5)', 
+              background: 'var(--bg-color)', 
+              border: '1px solid var(--border-color)', 
               borderRadius: '24px', 
               padding: '3rem 2.5rem',
-              backdropFilter: 'blur(12px)',
-              cursor: 'default'
+              cursor: 'default',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02)'
             }}
           >
-            <div style={{ width: '56px', height: '56px', marginBottom: '2rem', color: '#f59e0b', background: 'rgba(245, 158, 11, 0.1)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: '56px', height: '56px', marginBottom: '2rem', color: '#f59e0b', background: '#fef3c7', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             </div>
             <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontWeight: 800, letterSpacing: '-0.01em' }}>Automated Escalation</h3>
-            <p style={{ color: '#94a3b8', lineHeight: 1.6, fontSize: '1.05rem' }}>
+            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, fontSize: '1.05rem' }}>
               From the student portal to the Dean's dashboard, everyone shares a single source of truth. Time-triggered escalations ensure ignored requests instantly bypass low-level queues.
             </p>
           </motion.div>
