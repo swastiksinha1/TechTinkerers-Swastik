@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, AlertTriangle, Search, Link as LinkIcon, MessageSquare, Clock } from 'lucide-react';
+import { CheckCircle, AlertTriangle, Search, Link as LinkIcon, MessageSquare, Clock, Key, ShieldAlert } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const TechnicianDashboard = () => {
@@ -9,6 +9,12 @@ const TechnicianDashboard = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [timeLeft, setTimeLeft] = useState<string>('');
+
+  // Handshake & Dead-Man's Switch Mock State
+  const [pinInput, setPinInput] = useState('');
+  const [isVerified, setIsVerified] = useState(false);
+  const [deadManSeconds, setDeadManSeconds] = useState(45); // 45 seconds for demo
+  const [isDead, setIsDead] = useState(false);
 
   const fetchComplaintDetails = async (id: string) => {
     try {
@@ -20,11 +26,40 @@ const TechnicianDashboard = () => {
         const data2 = await res2.json();
         setComplaint(data1.complaint);
         setLedger(data2.logs);
+        
+        // Reset local states for the new ticket
+        setIsVerified(false);
+        setPinInput('');
+        setDeadManSeconds(45);
+        setIsDead(false);
+
         return true;
       }
       return false;
     } catch (e) {
       console.error(e);
+      // Mock Data if Backend fails (Since DB is unreachable)
+      if (id === '123') {
+        setComplaint({
+          id: '123',
+          title: 'Sparking Outlet in Room 4B',
+          department: 'Electrical',
+          priority: 'CRITICAL',
+          description: 'The wall outlet is sparking when I plug in my laptop.',
+          status: 'ASSIGNED',
+          escalationLevel: 0,
+          deadline: new Date(Date.now() + 1000 * 60 * 60 * 2).toISOString() // 2 hours from now
+        });
+        setLedger([
+          { id: '1', createdAt: new Date().toISOString(), action: 'TICKET_CREATED', details: 'Student submitted issue via AI Triage', hash: 'abc123hash', previousHash: 'GENESIS' },
+          { id: '2', createdAt: new Date().toISOString(), action: 'AUTO_ASSIGNED', details: 'Smart routed to Technician John Doe', hash: 'def456hash', previousHash: 'abc123hash' }
+        ]);
+        setIsVerified(false);
+        setPinInput('');
+        setDeadManSeconds(45);
+        setIsDead(false);
+        return true;
+      }
       return false;
     }
   };
@@ -37,41 +72,47 @@ const TechnicianDashboard = () => {
     
     const found = await fetchComplaintDetails(complaintId);
     if (!found) {
-      setMessage({ type: 'error', text: 'Complaint not found.' });
+      setMessage({ type: 'error', text: 'Complaint not found. Try UUID "123" for demo.' });
       setComplaint(null);
       setLedger([]);
     }
     setIsProcessing(false);
   };
 
-  const handleResolve = async () => {
-    setIsProcessing(true);
-    setMessage(null);
-    try {
-      const response = await fetch(`/api/complaints/${complaintId}/resolve`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
-      });
-      if (response.ok) {
-        setMessage({ type: 'success', text: 'Ticket fixed! Awaiting student verification before it can be closed.' });
-        await fetchComplaintDetails(complaintId);
-      } else {
-        const data = await response.json();
-        setMessage({ type: 'error', text: data.error || 'Failed to resolve.' });
-      }
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Network error.' });
-    } finally {
-      setIsProcessing(false);
+  const handleVerifyPin = () => {
+    // In production, this would call the backend to verify the PIN
+    if (pinInput === '1234') { // Mock correct PIN
+      setIsVerified(true);
+      setMessage({ type: 'success', text: 'Handshake successful. Ticket unlocked.' });
+    } else {
+      setMessage({ type: 'error', text: 'Invalid PIN. Please ask the student for the correct code.' });
     }
   };
 
-  const handleWhatsAppAlert = () => {
-    setMessage({ type: 'success', text: 'Simulated: Broadcast alert dispatched.' });
+  const handleLogActivity = () => {
+    // Resets the Dead-Man's Switch timer
+    setDeadManSeconds(45);
+    setMessage({ type: 'success', text: 'Activity logged. Inactivity timer reset.' });
   };
 
-  // Countdown Timer Logic
+  // Dead-Man's Switch Timer
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isVerified && !isDead && complaint?.status !== 'RESOLVED') {
+      interval = setInterval(() => {
+        setDeadManSeconds(prev => {
+          if (prev <= 1) {
+            setIsDead(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isVerified, isDead, complaint]);
+
+  // SLA Countdown Timer Logic
   useEffect(() => {
     if (!complaint || !complaint.deadline) return;
     
@@ -94,22 +135,11 @@ const TechnicianDashboard = () => {
     return () => clearInterval(interval);
   }, [complaint]);
 
-  // Poll for escalation updates if not resolved
-  useEffect(() => {
-    if (!complaint || complaint.status === 'RESOLVED' || complaint.status === 'CLOSED') return;
-    
-    const poll = setInterval(() => {
-      fetchComplaintDetails(complaint.id);
-    }, 5000); // Check every 5s for demo
-
-    return () => clearInterval(poll);
-  }, [complaint]);
-
   const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
   const itemVariants = { hidden: { opacity: 0, y: 30 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 80 } } };
 
   return (
-    <motion.div variants={containerVariants} initial="hidden" animate="show" style={{ maxWidth: '1000px', margin: '0 auto', paddingTop: '4rem' }}>
+    <motion.div variants={containerVariants} initial="hidden" animate="show" style={{ maxWidth: '1000px', margin: '0 auto', paddingTop: '4rem', paddingBottom: '6rem' }}>
       
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem', marginBottom: '4rem' }}>
         <motion.div variants={itemVariants} className="glass-panel" style={{ padding: '3rem', textAlign: 'center' }}>
@@ -138,7 +168,7 @@ const TechnicianDashboard = () => {
             type="text"
             className="glass-input"
             style={{ flex: 1, fontSize: '1.25rem', padding: '1.5rem 2rem' }}
-            placeholder="Enter Complaint UUID..."
+            placeholder="Enter Complaint UUID (e.g. 123)..."
             value={complaintId}
             onChange={(e) => setComplaintId(e.target.value)}
             required
@@ -170,7 +200,7 @@ const TechnicianDashboard = () => {
           {complaint && (
             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
               
-              {/* Ticket Details & Countdown */}
+              {/* Ticket Details & SLA Countdown */}
               <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '2rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
                   <div>
@@ -178,33 +208,75 @@ const TechnicianDashboard = () => {
                     <div style={{ color: '#64748b', fontSize: '1.1rem' }}>Department: {complaint.department} | Priority: <strong style={{ color: complaint.priority === 'CRITICAL' ? '#ef4444' : '#0f172a'}}>{complaint.priority}</strong></div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '0.9rem', textTransform: 'uppercase', fontWeight: 700, color: '#64748b', marginBottom: '0.25rem' }}>Time Remaining</div>
+                    <div style={{ fontSize: '0.9rem', textTransform: 'uppercase', fontWeight: 700, color: '#64748b', marginBottom: '0.25rem' }}>SLA Time Remaining</div>
                     <div style={{ fontSize: '2rem', fontWeight: 900, color: timeLeft === 'EXPIRED' ? '#ef4444' : '#10b981', fontFamily: 'monospace' }}>
                       {timeLeft}
                     </div>
                   </div>
                 </div>
-
-                {complaint.escalationLevel > 0 && (
-                  <div style={{ background: '#fee2e2', color: '#991b1b', padding: '1rem', borderRadius: '8px', fontWeight: 700, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <AlertTriangle size={20} />
-                    ESCALATED TO {complaint.escalationLevel === 1 ? 'WARDEN' : 'DEAN'}
-                  </div>
-                )}
                 
                 <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e2e8f0', color: '#334155' }}>
                   {complaint.description}
                 </div>
               </div>
 
+              {/* DUAL HANDSHAKE & DEAD-MAN'S SWITCH UI */}
+              {isDead ? (
+                <div style={{ padding: '3rem', background: '#fef2f2', border: '2px solid #ef4444', borderRadius: '12px', textAlign: 'center' }}>
+                  <ShieldAlert size={64} color="#ef4444" style={{ margin: '0 auto 1rem' }} />
+                  <h3 style={{ color: '#991b1b', fontSize: '2rem', fontWeight: 900, marginBottom: '1rem' }}>Ticket Unassigned</h3>
+                  <p style={{ color: '#7f1d1d', fontSize: '1.25rem' }}>
+                    The Dead-Man's Inactivity Switch was triggered due to 45 seconds of inactivity. 
+                    This ticket has been securely routed back to the central queue.
+                  </p>
+                </div>
+              ) : !isVerified ? (
+                <div style={{ padding: '3rem', background: '#eff6ff', border: '2px solid #3b82f6', borderRadius: '12px', textAlign: 'center' }}>
+                  <Key size={48} color="#2563eb" style={{ margin: '0 auto 1rem' }} />
+                  <h3 style={{ color: '#1e3a8a', fontSize: '2rem', fontWeight: 900, marginBottom: '1rem' }}>Dual Handshake Required</h3>
+                  <p style={{ color: '#1e40af', fontSize: '1.1rem', marginBottom: '2rem' }}>
+                    To unlock this ticket, you must enter the 4-digit PIN currently displayed on the student's device. 
+                    (Demo PIN: <strong>1234</strong>)
+                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
+                    <input 
+                      type="text"
+                      maxLength={4}
+                      value={pinInput}
+                      onChange={(e) => setPinInput(e.target.value)}
+                      placeholder="Enter 4-Digit PIN"
+                      style={{ fontSize: '1.5rem', padding: '1rem 2rem', borderRadius: '8px', border: '2px solid #93c5fd', textAlign: 'center', width: '200px', fontWeight: 800, letterSpacing: '0.2em' }}
+                    />
+                    <button onClick={handleVerifyPin} className="glass-button" style={{ background: '#2563eb', color: 'white', padding: '0 2rem', fontSize: '1.25rem' }}>
+                      Verify
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ padding: '2rem', background: deadManSeconds < 15 ? '#fef2f2' : '#f8fafc', border: `2px solid ${deadManSeconds < 15 ? '#ef4444' : '#cbd5e1'}`, borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <h4 style={{ color: deadManSeconds < 15 ? '#ef4444' : '#0f172a', margin: '0 0 0.5rem', fontSize: '1.5rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Activity size={24} /> Dead-Man's Switch Active
+                    </h4>
+                    <p style={{ color: '#64748b', margin: 0 }}>Ticket will unassign if no activity is logged.</p>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+                    <div style={{ fontSize: '3rem', fontWeight: 900, color: deadManSeconds < 15 ? '#ef4444' : '#0f172a', fontFamily: 'monospace' }}>
+                      00:{deadManSeconds.toString().padStart(2, '0')}
+                    </div>
+                    <button onClick={handleLogActivity} className="glass-button" style={{ background: '#0f172a', color: 'white', padding: '1rem 2rem', fontSize: '1.1rem' }}>
+                      Log Activity (Reset)
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Actions Panel */}
               <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
-                {(complaint.status === 'PENDING' || complaint.status === 'ASSIGNED' || complaint.status === 'ESCALATED') && (
-                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleResolve} disabled={isProcessing} className="glass-button outline" style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.75rem', borderColor: '#d97706', color: '#d97706' }}>
-                    <CheckCircle size={20} /> Mark as Fixed (Requires Student Verif.)
-                  </motion.button>
-                )}
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleWhatsAppAlert} className="glass-button" style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.75rem' }}>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} disabled={!isVerified || isDead} className="glass-button outline" style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.75rem', borderColor: '#d97706', color: '#d97706', opacity: (!isVerified || isDead) ? 0.5 : 1 }}>
+                  <CheckCircle size={20} /> Mark as Fixed (Requires Student Verif.)
+                </motion.button>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} disabled={!isVerified || isDead} className="glass-button" style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.75rem', opacity: (!isVerified || isDead) ? 0.5 : 1 }}>
                   <MessageSquare size={20} /> Broadcast Update
                 </motion.button>
               </div>

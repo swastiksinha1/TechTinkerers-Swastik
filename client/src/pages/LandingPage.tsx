@@ -12,31 +12,31 @@ const ProcessStep = ({ step, index, numSteps, processScroll }: { step: { title: 
 
   // Smooth overlap using mapping functions to avoid Framer Motion WAAPI out-of-bounds offset crashes
   const opacity = useTransform(processScroll, (v) => {
-    if (v <= start || v >= end) return 0;
-    if (v <= peak) return (v - start) / (peak - start);
-    return 1 - ((v - peak) / (end - peak));
+    if (v <= start || v >= end) return 0.2;
+    if (v <= peak) return 0.2 + 0.8 * ((v - start) / (peak - start));
+    return 1 - 0.8 * ((v - peak) / (end - peak));
   });
 
   const y = useTransform(processScroll, (v) => {
-    if (v <= start) return 350;
-    if (v >= end) return -350;
-    if (v <= peak) return 350 - 350 * ((v - start) / (peak - start));
-    return -350 * ((v - peak) / (end - peak));
+    if (v <= start) return 300;
+    if (v >= end) return -300;
+    if (v <= peak) return 300 - 300 * ((v - start) / (peak - start));
+    return -300 * ((v - peak) / (end - peak));
   });
 
   const scale = useTransform(processScroll, (v) => {
-    if (v <= start || v >= end) return 0.7;
-    if (v <= peak) return 0.7 + 0.3 * ((v - start) / (peak - start));
-    return 1 - 0.3 * ((v - peak) / (end - peak));
+    if (v <= start || v >= end) return 0.85;
+    if (v <= peak) return 0.85 + 0.15 * ((v - start) / (peak - start));
+    return 1 - 0.15 * ((v - peak) / (end - peak));
   });
 
   const filter = useTransform(processScroll, (v) => {
-    if (v <= start || v >= end) return "blur(8px)";
+    if (v <= start || v >= end) return "blur(3px)";
     if (v <= peak) {
-      const b = 8 - 8 * ((v - start) / (peak - start));
+      const b = 3 - 3 * ((v - start) / (peak - start));
       return `blur(${b}px)`;
     }
-    const b = 8 * ((v - peak) / (end - peak));
+    const b = 3 * ((v - peak) / (end - peak));
     return `blur(${b}px)`;
   });
 
