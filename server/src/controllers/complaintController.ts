@@ -13,7 +13,29 @@ export const smartCreateComplaint = async (req: Request, res: Response) => {
     // 1. Analyze unstructured text with Gemini AI
     const aiAnalysis = await analyzeComplaint(text);
 
-    // 2. Set deadline based on priority (SLA)
+    // 2. Ensure User and Location exist to satisfy Foreign Key constraints
+    await prisma.user.upsert({
+      where: { id: reporterId },
+      update: {},
+      create: {
+        id: reporterId,
+        email: `student_${reporterId}@campus.edu`,
+        name: `Student ${reporterId}`,
+        role: 'STUDENT'
+      }
+    });
+
+    await prisma.location.upsert({
+      where: { id: locationId },
+      update: {},
+      create: {
+        id: locationId,
+        qrCodeId: `qr_${locationId}`,
+        name: `Room / Area ${locationId}`
+      }
+    });
+
+    // 3. Set deadline based on priority (SLA)
     let deadline = new Date();
     switch (aiAnalysis.priority) {
       case 'CRITICAL': deadline.setHours(deadline.getHours() + 2); break; // 2 hours
