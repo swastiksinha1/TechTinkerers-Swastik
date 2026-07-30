@@ -1,22 +1,31 @@
-import React, { useState } from 'react';
-import { CheckCircle, AlertTriangle, ShieldCheck, Search, Link as LinkIcon, MessageSquare } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { CheckCircle, AlertTriangle, Search, Link as LinkIcon, MessageSquare, Clock } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const TechnicianDashboard = () => {
   const [complaintId, setComplaintId] = useState('');
+  const [complaint, setComplaint] = useState<any>(null);
   const [ledger, setLedger] = useState<any[]>([]);
-  const [complaintStatus, setComplaintStatus] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [timeLeft, setTimeLeft] = useState<string>('');
 
-  const fetchLedger = async (id: string) => {
+  const fetchComplaintDetails = async (id: string) => {
     try {
-      const response = await fetch(`/api/complaints/${id}/ledger`);
-      if (response.ok) {
-        const data = await response.json();
-        setLedger(data.logs);
+      const res1 = await fetch(`/api/complaints/${id}`);
+      const res2 = await fetch(`/api/complaints/${id}/ledger`);
+      
+      if (res1.ok && res2.ok) {
+        const data1 = await res1.json();
+        const data2 = await res2.json();
+        setComplaint(data1.complaint);
+        setLedger(data2.logs);
+        return true;
       }
+      return false;
     } catch (e) {
       console.error(e);
+      return false;
     }
   };
 
@@ -24,28 +33,15 @@ const TechnicianDashboard = () => {
     e.preventDefault();
     if (!complaintId) return;
     setIsProcessing(true);
+    setMessage(null);
     
-    // Quick mock fetch to get status
-    try {
-       // We'll just fetch ledger to see if it exists, and infer status from the last log
-       const response = await fetch(`/api/complaints/${complaintId}/ledger`);
-       if (response.ok) {
-         const data = await response.json();
-         setLedger(data.logs);
-         if (data.logs.length > 0) {
-           const lastAction = data.logs[data.logs.length - 1].action;
-           if (lastAction === 'CREATED_VIA_AI') setComplaintStatus('PENDING');
-           else if (lastAction === 'STATUS_CHANGED') setComplaintStatus('AWAITING_VERIFICATION');
-           else if (lastAction === 'STUDENT_CONFIRMED') setComplaintStatus('RESOLVED');
-         }
-       } else {
-         setMessage({ type: 'error', text: 'Complaint not found.' });
-       }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsProcessing(false);
+    const found = await fetchComplaintDetails(complaintId);
+    if (!found) {
+      setMessage({ type: 'error', text: 'Complaint not found.' });
+      setComplaint(null);
+      setLedger([]);
     }
+    setIsProcessing(false);
   };
 
   const handleResolve = async () => {
@@ -55,12 +51,11 @@ const TechnicianDashboard = () => {
       const response = await fetch(`/api/complaints/${complaintId}/resolve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rating: 5 }),
+        body: JSON.stringify({}),
       });
       if (response.ok) {
-        setMessage({ type: 'success', text: 'Ticket fixed! Awaiting student verification.' });
-        setComplaintStatus('AWAITING_VERIFICATION');
-        await fetchLedger(complaintId);
+        setMessage({ type: 'success', text: 'Ticket fixed! Awaiting student verification before it can be closed.' });
+        await fetchComplaintDetails(complaintId);
       } else {
         const data = await response.json();
         setMessage({ type: 'error', text: data.error || 'Failed to resolve.' });
@@ -72,117 +67,183 @@ const TechnicianDashboard = () => {
     }
   };
 
-  const handleStudentConfirm = async () => {
-    setIsProcessing(true);
-    setMessage(null);
-    try {
-      const response = await fetch(`/api/complaints/${complaintId}/confirm`, { method: 'POST' });
-      if (response.ok) {
-        setMessage({ type: 'success', text: 'Student Verified! Gamification Karma Points Awarded.' });
-        setComplaintStatus('RESOLVED');
-        await fetchLedger(complaintId);
-      } else {
-        setMessage({ type: 'error', text: 'Failed to confirm.' });
-      }
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Network error.' });
-    } finally {
-      setIsProcessing(false);
-    }
+  const handleWhatsAppAlert = () => {
+    setMessage({ type: 'success', text: 'Simulated: Broadcast alert dispatched.' });
   };
 
-  const handleWhatsAppAlert = () => {
-    setMessage({ type: 'success', text: 'Simulated: Multi-channel WhatsApp & SMS alert dispatched to student and warden via Twilio API.' });
-  };
+  // Countdown Timer Logic
+  useEffect(() => {
+    if (!complaint || !complaint.deadline) return;
+    
+    const interval = setInterval(() => {
+      const now = new Date().getTime();
+      const deadline = new Date(complaint.deadline).getTime();
+      const distance = deadline - now;
+
+      if (distance < 0) {
+        setTimeLeft('EXPIRED');
+        clearInterval(interval);
+      } else {
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        setTimeLeft(`${hours}h ${minutes}m ${seconds}s`);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [complaint]);
+
+  // Poll for escalation updates if not resolved
+  useEffect(() => {
+    if (!complaint || complaint.status === 'RESOLVED' || complaint.status === 'CLOSED') return;
+    
+    const poll = setInterval(() => {
+      fetchComplaintDetails(complaint.id);
+    }, 5000); // Check every 5s for demo
+
+    return () => clearInterval(poll);
+  }, [complaint]);
+
+  const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
+  const itemVariants = { hidden: { opacity: 0, y: 30 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 80 } } };
 
   return (
-    <div className="animate-slide-up" style={{ maxWidth: '900px', margin: '0 auto' }}>
+    <motion.div variants={containerVariants} initial="hidden" animate="show" style={{ maxWidth: '1000px', margin: '0 auto', paddingTop: '4rem' }}>
       
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
-        <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center' }}>
-          <ShieldCheck size={48} color="var(--primary-color)" style={{ margin: '0 auto 1rem' }} />
-          <h3 style={{ fontSize: '2rem', margin: '0 0 0.5rem' }}>142</h3>
-          <p style={{ color: 'var(--text-secondary)' }}>My Karma Points</p>
-        </div>
-        <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center' }}>
-          <AlertTriangle size={48} color="var(--warning)" style={{ margin: '0 auto 1rem' }} />
-          <h3 style={{ fontSize: '2rem', margin: '0 0 0.5rem' }}>1</h3>
-          <p style={{ color: 'var(--text-secondary)' }}>Pending Critical SLA</p>
-        </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem', marginBottom: '4rem' }}>
+        <motion.div variants={itemVariants} className="glass-panel" style={{ padding: '3rem', textAlign: 'center' }}>
+          <Clock size={56} color="var(--primary-color)" style={{ margin: '0 auto 1.5rem' }} />
+          <h3 style={{ fontSize: '4rem', margin: '0 0 0.5rem', fontWeight: 900, letterSpacing: '-0.04em' }}>
+            {timeLeft && timeLeft !== 'EXPIRED' ? timeLeft.split(' ')[0] : '0h'}
+          </h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1.25rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Avg SLA Time Remaining</p>
+        </motion.div>
+        
+        <motion.div variants={itemVariants} className="glass-panel" style={{ padding: '3rem', textAlign: 'center' }}>
+          <AlertTriangle size={56} color="#d97706" style={{ margin: '0 auto 1.5rem' }} />
+          <h3 style={{ fontSize: '4rem', margin: '0 0 0.5rem', fontWeight: 900, letterSpacing: '-0.04em' }}>1</h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1.25rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pending Critical SLA</p>
+        </motion.div>
       </div>
 
-      <div className="glass-panel" style={{ padding: '2rem' }}>
-        <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Search color="var(--primary-color)" size={24} />
-          Investigate Ticket
+      <motion.div variants={itemVariants} className="glass-panel" style={{ padding: '4rem' }}>
+        <h2 style={{ marginBottom: '2.5rem', display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '2.5rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
+          Investigate Ticket.
         </h2>
         
-        <form onSubmit={handleSearch} style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-          <input
+        <form onSubmit={handleSearch} style={{ display: 'flex', gap: '1.5rem', marginBottom: '3rem' }}>
+          <motion.input
+            whileFocus={{ scale: 1.01 }}
             type="text"
             className="glass-input"
-            style={{ flex: 1 }}
-            placeholder="Complaint UUID (Copy from terminal or DB)"
+            style={{ flex: 1, fontSize: '1.25rem', padding: '1.5rem 2rem' }}
+            placeholder="Enter Complaint UUID..."
             value={complaintId}
             onChange={(e) => setComplaintId(e.target.value)}
             required
           />
-          <button type="submit" className="glass-button" disabled={isProcessing}>
-            Search
-          </button>
+          <motion.button 
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            type="submit" 
+            className="glass-button" 
+            disabled={isProcessing}
+            style={{ fontSize: '1.25rem', padding: '0 3rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}
+          >
+            <Search size={24} />
+            {isProcessing ? 'Searching...' : 'Search'}
+          </motion.button>
         </form>
 
-        {message && (
-          <div style={{ marginBottom: '1.5rem', padding: '1rem', background: message.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', border: `1px solid ${message.type === 'success' ? 'var(--success)' : 'var(--danger)'}`, borderRadius: '8px', color: message.type === 'success' ? 'var(--success)' : 'var(--danger)' }}>
-            {message.text}
-          </div>
-        )}
+        <AnimatePresence>
+          {message && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto', marginBottom: '3rem' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
+              <div style={{ padding: '1.5rem 2rem', background: message.type === 'success' ? '#f0fdf4' : '#fef2f2', border: `1px solid ${message.type === 'success' ? '#86efac' : '#fecaca'}`, borderRadius: '8px', color: message.type === 'success' ? '#166534' : '#991b1b', fontSize: '1.1rem', fontWeight: 600 }}>
+                {message.text}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {ledger.length > 0 && (
-          <div className="animate-slide-up" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            
-            {/* Actions Panel */}
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-              {complaintStatus === 'PENDING' && (
-                <button onClick={handleResolve} disabled={isProcessing} className="glass-button" style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', background: 'rgba(245, 158, 11, 0.2)' }}>
-                  <CheckCircle size={18} /> Mark as Fixed
-                </button>
-              )}
-              {complaintStatus === 'AWAITING_VERIFICATION' && (
-                <button onClick={handleStudentConfirm} disabled={isProcessing} className="glass-button" style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', background: 'rgba(16, 185, 129, 0.2)', border: '1px solid var(--success)' }}>
-                  <ShieldCheck size={18} /> (Student Mock) Confirm Resolution
-                </button>
-              )}
-              <button onClick={handleWhatsAppAlert} className="glass-button" style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
-                <MessageSquare size={18} /> Broadcast Update
-              </button>
-            </div>
-
-            {/* Blockchain Ledger View */}
-            <div>
-              <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)' }}>
-                <LinkIcon size={20} /> Tamper-Evident Hash Chain
-              </h3>
-              <div style={{ background: '#000', borderRadius: '12px', padding: '1.5rem', fontFamily: 'monospace', fontSize: '0.85rem', color: '#0f0', overflowX: 'auto', boxShadow: 'inset 0 0 10px rgba(0,0,0,0.5)' }}>
-                {ledger.map((log, index) => (
-                  <div key={log.id} style={{ marginBottom: '1.5rem', borderLeft: '2px solid #0f0', paddingLeft: '1rem' }}>
-                    <div style={{ color: '#fff', marginBottom: '0.25rem' }}>[{new Date(log.createdAt).toLocaleString()}]</div>
-                    <div style={{ fontWeight: 'bold', color: '#ff0' }}>ACTION: {log.action}</div>
-                    <div>DETAILS: {log.details}</div>
-                    <div style={{ color: '#888', marginTop: '0.5rem', wordBreak: 'break-all' }}>
-                      PREV_HASH: {log.previousHash || 'GENESIS'}
-                    </div>
-                    <div style={{ color: '#0ff', wordBreak: 'break-all' }}>
-                      BLOCK_HASH: {log.hash}
+        <AnimatePresence>
+          {complaint && (
+            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
+              
+              {/* Ticket Details & Countdown */}
+              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+                  <div>
+                    <h3 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.5rem' }}>{complaint.title}</h3>
+                    <div style={{ color: '#64748b', fontSize: '1.1rem' }}>Department: {complaint.department} | Priority: <strong style={{ color: complaint.priority === 'CRITICAL' ? '#ef4444' : '#0f172a'}}>{complaint.priority}</strong></div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '0.9rem', textTransform: 'uppercase', fontWeight: 700, color: '#64748b', marginBottom: '0.25rem' }}>Time Remaining</div>
+                    <div style={{ fontSize: '2rem', fontWeight: 900, color: timeLeft === 'EXPIRED' ? '#ef4444' : '#10b981', fontFamily: 'monospace' }}>
+                      {timeLeft}
                     </div>
                   </div>
-                ))}
+                </div>
+
+                {complaint.escalationLevel > 0 && (
+                  <div style={{ background: '#fee2e2', color: '#991b1b', padding: '1rem', borderRadius: '8px', fontWeight: 700, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <AlertTriangle size={20} />
+                    ESCALATED TO {complaint.escalationLevel === 1 ? 'WARDEN' : 'DEAN'}
+                  </div>
+                )}
+                
+                <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e2e8f0', color: '#334155' }}>
+                  {complaint.description}
+                </div>
               </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+
+              {/* Actions Panel */}
+              <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+                {(complaint.status === 'PENDING' || complaint.status === 'ASSIGNED' || complaint.status === 'ESCALATED') && (
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleResolve} disabled={isProcessing} className="glass-button outline" style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.75rem', borderColor: '#d97706', color: '#d97706' }}>
+                    <CheckCircle size={20} /> Mark as Fixed (Requires Student Verif.)
+                  </motion.button>
+                )}
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleWhatsAppAlert} className="glass-button" style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.75rem' }}>
+                  <MessageSquare size={20} /> Broadcast Update
+                </motion.button>
+              </div>
+
+              {/* Blockchain Ledger View */}
+              <div>
+                <h3 style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--primary-color)', fontSize: '1.8rem', fontWeight: 800 }}>
+                  <LinkIcon size={28} /> Tamper-Evident Hash Chain
+                </h3>
+                <div style={{ background: '#f8fafc', borderRadius: '12px', padding: '3rem', fontFamily: 'monospace', fontSize: '1rem', color: '#0f172a', overflowX: 'auto', border: '1px solid #e2e8f0' }}>
+                  <AnimatePresence>
+                    {ledger.map((log, index) => (
+                      <motion.div 
+                        key={log.id}
+                        initial={{ opacity: 0, x: -30 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.15, type: 'spring', stiffness: 100 }}
+                        style={{ marginBottom: index === ledger.length - 1 ? 0 : '3rem', borderLeft: '3px solid #3b82f6', paddingLeft: '2rem', position: 'relative' }}
+                      >
+                        <div style={{ position: 'absolute', left: '-8px', top: '0', width: '13px', height: '13px', background: '#3b82f6', borderRadius: '50%' }}></div>
+                        <div style={{ color: '#64748b', marginBottom: '0.75rem', fontWeight: 600 }}>[{new Date(log.createdAt).toLocaleString()}]</div>
+                        <div style={{ fontWeight: 800, color: log.action === 'AUTOMATIC_ESCALATION' ? '#ef4444' : '#0f172a', fontSize: '1.25rem', marginBottom: '0.75rem' }}>ACTION: {log.action}</div>
+                        <div style={{ color: '#334155', marginBottom: '1.5rem', fontSize: '1.1rem' }}>DETAILS: {log.details}</div>
+                        <div style={{ color: '#94a3b8', marginBottom: '0.5rem', wordBreak: 'break-all' }}>
+                          PREV_HASH: {log.previousHash || 'GENESIS'}
+                        </div>
+                        <div style={{ color: '#3b82f6', wordBreak: 'break-all', fontWeight: 600 }}>
+                          BLOCK_HASH: {log.hash}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </motion.div>
   );
 };
 

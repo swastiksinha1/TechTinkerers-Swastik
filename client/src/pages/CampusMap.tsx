@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { AlertCircle, CheckCircle, Info } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const images = {
   boys: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=400',
@@ -45,83 +46,101 @@ const createCustomIcon = (status: string) => {
     className: 'custom-leaflet-icon',
     html: `
       <div style="
-        width: 32px; 
-        height: 32px; 
-        background: ${color}33; 
+        width: 36px; 
+        height: 36px; 
+        background: ${color}22; 
         border: 2px solid ${color}; 
         border-radius: 50%; 
         display: flex; 
         justify-content: center; 
         align-items: center; 
-        box-shadow: 0 0 15px ${color};
+        box-shadow: 0 4px 12px ${color}66;
+        animation: pulse 2s infinite;
       ">
-        <div style="width: 10px; height: 10px; background: ${color}; border-radius: 50%;"></div>
+        <div style="width: 12px; height: 12px; background: ${color}; border-radius: 50%;"></div>
       </div>
     `,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-    popupAnchor: [0, -16]
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+    popupAnchor: [0, -18]
   });
 };
 
 const CampusMap = () => {
   return (
-    <div className="animate-slide-up" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <motion.div 
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '2rem', paddingTop: '2rem', paddingBottom: '4rem' }}
+    >
+      <div className="glass-panel" style={{ padding: '3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h2 style={{ margin: 0 }}>VIT Bhopal Campus Radar</h2>
-          <p style={{ color: 'var(--text-secondary)', margin: '0.5rem 0 0 0' }}>Real-time 2D surveillance feed.</p>
+          <h2 className="section-heading" style={{ margin: 0, fontSize: '2.5rem' }}>
+            Campus Radar.
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', margin: '0.5rem 0 0 0', fontSize: '1.25rem', fontWeight: 600 }}>Real-time 2D surveillance feed.</p>
         </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <span style={{ color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><CheckCircle size={16}/> Clear</span>
-          <span style={{ color: 'var(--warning)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Info size={16}/> Warning</span>
-          <span style={{ color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><AlertCircle size={16}/> Critical</span>
+        <div style={{ display: 'flex', gap: '2rem', background: '#f1f5f9', padding: '1.5rem 2rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+          <span style={{ color: '#16a34a', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800, fontSize: '1.1rem' }}><CheckCircle size={24}/> Clear</span>
+          <span style={{ color: '#d97706', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800, fontSize: '1.1rem' }}><Info size={24}/> Warning</span>
+          <span style={{ color: '#dc2626', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800, fontSize: '1.1rem' }}><AlertCircle size={24}/> Critical</span>
         </div>
       </div>
 
-      <div className="glass-panel" style={{ height: '70vh', width: '100%', overflow: 'hidden', borderRadius: '16px' }}>
-        <MapContainer 
-          center={[23.0755, 76.8485]} 
-          zoom={16} 
-          style={{ height: '100%', width: '100%', background: '#0f172a' }}
-        >
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            attribution='&copy; OpenStreetMap &copy; CARTO'
-          />
-          
-          {locations.map((loc) => {
-            const status = getHealthStatus(loc.id);
-            return (
-              <Marker 
-                key={loc.id} 
-                position={[loc.lat, loc.lng]}
-                icon={createCustomIcon(status)}
-              >
-                <Popup className="dark-popup">
-                  <div style={{ padding: '0.5rem', background: '#1e293b', color: 'white', borderRadius: '8px' }}>
-                    <img 
-                      src={loc.img} 
-                      alt={loc.name} 
-                      style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '4px', marginBottom: '8px' }} 
-                    />
-                    <h3 style={{ margin: '0 0 4px 0', fontSize: '1.1rem', color: 'white' }}>{loc.name}</h3>
-                    <p style={{ margin: 0, fontSize: '0.9rem', color: '#94a3b8', fontWeight: 'bold' }}>
-                      Status: <span style={{ color: getColor(status) }}>{status}</span>
-                    </p>
-                    {status !== 'CLEAR' && (
-                      <p style={{ margin: '8px 0 0 0', fontSize: '0.85rem', color: '#cbd5e1' }}>
-                        Active complaints detected. Technician required.
-                      </p>
-                    )}
-                  </div>
-                </Popup>
-              </Marker>
-            );
-          })}
-        </MapContainer>
-      </div>
-    </div>
+      <motion.div 
+        initial={{ y: 40, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.3, type: 'spring', stiffness: 80 }}
+        className="glass-panel" 
+        style={{ height: '70vh', width: '100%', overflow: 'hidden', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '1rem', background: '#ffffff' }}
+      >
+        <div style={{ width: '100%', height: '100%', borderRadius: '8px', overflow: 'hidden' }}>
+          <MapContainer 
+            center={[23.0755, 76.8485]} 
+            zoom={16} 
+            style={{ height: '100%', width: '100%', background: '#e2e8f0' }}
+          >
+            <TileLayer
+              url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+              attribution='&copy; OpenStreetMap &copy; CARTO'
+            />
+            
+            {locations.map((loc) => {
+              const status = getHealthStatus(loc.id);
+              return (
+                <Marker 
+                  key={loc.id} 
+                  position={[loc.lat, loc.lng]}
+                  icon={createCustomIcon(status)}
+                >
+                  <Popup minWidth={300}>
+                    <div style={{ padding: '0', background: '#ffffff', color: '#0f172a' }}>
+                      <img 
+                        src={loc.img} 
+                        alt={loc.name} 
+                        style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '4px 4px 0 0' }} 
+                      />
+                      <div style={{ padding: '1.5rem' }}>
+                        <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem', fontWeight: 800 }}>{loc.name}</h3>
+                        <p style={{ margin: 0, fontSize: '1rem', color: '#64748b', fontWeight: 600 }}>
+                          Status: <span style={{ color: getColor(status), padding: '0.2rem 0.75rem', borderRadius: '4px', background: `${getColor(status)}22` }}>{status}</span>
+                        </p>
+                        {status !== 'CLEAR' && (
+                          <p style={{ margin: '1rem 0 0 0', fontSize: '1rem', color: '#dc2626', lineHeight: 1.5, borderTop: '1px solid #e2e8f0', paddingTop: '1rem', fontWeight: 600 }}>
+                            ⚠️ Active complaints detected. Technician required immediately.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            })}
+          </MapContainer>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 };
 

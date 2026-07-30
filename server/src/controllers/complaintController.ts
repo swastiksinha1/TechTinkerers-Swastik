@@ -42,25 +42,40 @@ export const smartCreateComplaint = async (req: Request, res: Response) => {
       }
     });
 
-    // 3. Set deadline based on priority (SLA)
+    // 3. Instant Routing (Auto-Assign to Technician based on Department)
+    // In a real app, this would query active technicians in the assigned department.
+    const assigneeId = `tech_${aiAnalysis.department.toLowerCase().replace(/[^a-z0-9]/g, '')}_01`;
+    await prisma.user.upsert({
+      where: { id: assigneeId },
+      update: {},
+      create: {
+        id: assigneeId,
+        email: `${assigneeId}@campus.edu`,
+        name: `Tech ${aiAnalysis.department}`,
+        role: 'TECHNICIAN'
+      }
+    });
+
+    // 4. Set deadline based on priority (SLA)
     let deadline = new Date();
     switch (aiAnalysis.priority) {
-      case 'CRITICAL': deadline.setHours(deadline.getHours() + 2); break; // 2 hours
-      case 'HIGH': deadline.setHours(deadline.getHours() + 12); break; // 12 hours
-      case 'MEDIUM': deadline.setDate(deadline.getDate() + 2); break; // 2 days
-      case 'LOW': deadline.setDate(deadline.getDate() + 7); break; // 7 days
+      case 'CRITICAL': deadline.setMinutes(deadline.getMinutes() + 1); break; // 1 min for demo of Escalation
+      case 'HIGH': deadline.setHours(deadline.getHours() + 2); break; 
+      case 'MEDIUM': deadline.setHours(deadline.getHours() + 24); break; 
+      case 'LOW': deadline.setDate(deadline.getDate() + 7); break;
     }
 
-    // 4. Save structured ticket to DB
+    // 5. Save structured ticket to DB
     const complaint = await prisma.complaint.create({
       data: {
         title: aiAnalysis.title,
         description: text,
         department: aiAnalysis.department,
         priority: aiAnalysis.priority,
-        status: 'PENDING',
+        status: 'ASSIGNED', // Automatically moved past PENDING
         deadline,
         reporterId,
+        assigneeId, // Instant Routing
         locationId,
         aiAnalysis: JSON.stringify(aiAnalysis),
         escalationLevel: 0, // Starts at Technician
@@ -208,6 +223,34 @@ export const getComplaintLedger = async (req: Request, res: Response) => {
     return res.status(200).json({ logs });
   } catch (error) {
     console.error('Error fetching ledger:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getStudentComplaints = async (req: Request, res: Response) => {
+  try {
+    const { reporterId } = req.params;
+    const complaints = await prisma.complaint.findMany({
+      where: { reporterId },
+      orderBy: { createdAt: 'desc' }
+    });
+    return res.status(200).json({ complaints });
+  } catch (error) {
+    console.error('Error fetching student complaints:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getComplaint = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const complaint = await prisma.complaint.findUnique({
+      where: { id }
+    });
+    if (!complaint) return res.status(404).json({ error: 'Not found' });
+    return res.status(200).json({ complaint });
+  } catch (error) {
+    console.error('Error fetching complaint:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 };

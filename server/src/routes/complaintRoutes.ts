@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { smartCreateComplaint, resolveComplaint, confirmResolution, getComplaintLedger } from '../controllers/complaintController';
+import { smartCreateComplaint, resolveComplaint, confirmResolution, getComplaintLedger, getStudentComplaints, getComplaint } from '../controllers/complaintController';
 
 const router = Router();
 
@@ -18,5 +18,13 @@ router.post('/:id/confirm', confirmResolution);
 // Endpoint to fetch Tamper-Evident Ledger
 // GET /api/complaints/:id/ledger
 router.get('/:id/ledger', getComplaintLedger);
+
+// Endpoint to fetch student's active complaints
+// GET /api/complaints/student/:reporterId
+router.get('/student/:reporterId', getStudentComplaints);
+
+// Endpoint to fetch single complaint details
+// GET /api/complaints/:id
+router.get('/:id', getComplaint);
 
 export default router;
