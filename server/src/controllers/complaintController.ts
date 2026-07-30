@@ -82,7 +82,7 @@ export const smartCreateComplaint = async (req: Request, res: Response) => {
       },
     });
 
-    // 5. Blockchain-style Tamper-Evident Ledger (Genesis Block)
+    // 6. Blockchain-style Tamper-Evident Ledger (Genesis Block)
     const action = 'CREATED_VIA_AI';
     const details = 'Complaint was auto-categorized by AI Triage system';
     const hash = createLedgerHash(complaint.id, action, details, null);
@@ -100,6 +100,66 @@ export const smartCreateComplaint = async (req: Request, res: Response) => {
     return res.status(201).json({ message: 'Complaint created successfully', complaint });
   } catch (error: any) {
     console.error('Error creating smart complaint:', error);
+    return res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+};
+
+export const manualCreateComplaint = async (req: Request, res: Response) => {
+  try {
+    const { title, description, department, priority, reporterId, locationId } = req.body;
+
+    if (!title || !description || !department || !priority || !reporterId || !locationId) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // 1. Ensure User and Location exist
+    await prisma.user.upsert({
+      where: { id: reporterId },
+      update: {},
+      create: { id: reporterId, email: `student_${reporterId}@campus.edu`, name: `Student ${reporterId}`, role: 'STUDENT' }
+    });
+    await prisma.location.upsert({
+      where: { id: locationId },
+      update: {},
+      create: { id: locationId, qrCodeId: `qr_${locationId}`, name: `Room / Area ${locationId}` }
+    });
+
+    // 2. Instant Routing
+    const assigneeId = `tech_${department.toLowerCase().replace(/[^a-z0-9]/g, '')}_01`;
+    await prisma.user.upsert({
+      where: { id: assigneeId },
+      update: {},
+      create: { id: assigneeId, email: `${assigneeId}@campus.edu`, name: `Tech ${department}`, role: 'TECHNICIAN' }
+    });
+
+    // 3. Set deadline based on priority (SLA)
+    let deadline = new Date();
+    switch (priority) {
+      case 'CRITICAL': deadline.setMinutes(deadline.getMinutes() + 1); break; // 1 min for demo of Escalation
+      case 'HIGH': deadline.setHours(deadline.getHours() + 2); break; 
+      case 'MEDIUM': deadline.setHours(deadline.getHours() + 24); break; 
+      case 'LOW': deadline.setDate(deadline.getDate() + 7); break;
+    }
+
+    // 4. Save ticket to DB
+    const complaint = await prisma.complaint.create({
+      data: {
+        title, description, department, priority, status: 'ASSIGNED', deadline, reporterId, assigneeId, locationId, escalationLevel: 0,
+      },
+    });
+
+    // 5. Ledger
+    const action = 'CREATED_MANUALLY';
+    const details = 'Complaint was created manually by the user';
+    const hash = createLedgerHash(complaint.id, action, details, null);
+
+    await prisma.auditLog.create({
+      data: { action, details, complaintId: complaint.id, hash, previousHash: null },
+    });
+
+    return res.status(201).json({ message: 'Complaint created successfully', complaint });
+  } catch (error: any) {
+    console.error('Error creating manual complaint:', error);
     return res.status(500).json({ error: error.message || 'Internal server error' });
   }
 };

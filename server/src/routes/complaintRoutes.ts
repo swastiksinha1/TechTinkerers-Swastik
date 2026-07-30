@@ -1,11 +1,15 @@
 import { Router } from 'express';
-import { smartCreateComplaint, resolveComplaint, confirmResolution, getComplaintLedger, getStudentComplaints, getComplaint } from '../controllers/complaintController';
+import { smartCreateComplaint, manualCreateComplaint, resolveComplaint, confirmResolution, getComplaintLedger, getStudentComplaints, getComplaint } from '../controllers/complaintController';
 
 const router = Router();
 
 // Endpoint for AI Smart Triage
 // POST /api/complaints/smart
 router.post('/smart', smartCreateComplaint);
+
+// Endpoint for manual ticket submission
+// POST /api/complaints/manual
+router.post('/manual', manualCreateComplaint);
 
 // Endpoint for resolving a complaint and awarding karma points
 // POST /api/complaints/:id/resolve

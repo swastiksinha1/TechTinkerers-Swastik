@@ -15,12 +15,14 @@ const LandingPage = () => {
   const heroY = useTransform(scrollYProgress, [0, 0.05], [0, -100]);
 
   // Steps active state based on scroll
-  const step1Active = useTransform(scrollYProgress, [0.05, 0.15, 0.25], [0.3, 1, 0.3]);
-  const step2Active = useTransform(scrollYProgress, [0.20, 0.30, 0.40], [0.3, 1, 0.3]);
-  const step3Active = useTransform(scrollYProgress, [0.35, 0.45, 0.55], [0.3, 1, 0.3]);
-  const step4Active = useTransform(scrollYProgress, [0.50, 0.60, 0.70], [0.3, 1, 0.3]);
-  const step5Active = useTransform(scrollYProgress, [0.65, 0.75, 0.85], [0.3, 1, 0.3]);
-  const step6Active = useTransform(scrollYProgress, [0.80, 0.90, 0.98], [0.3, 1, 0.3]);
+  // Changing opacity from 0 to 1 to 0 so they don't overlap, 
+  // and tightening the ranges so they don't bleed into each other
+  const step1Active = useTransform(scrollYProgress, [0.00, 0.10, 0.20], [0, 1, 0]);
+  const step2Active = useTransform(scrollYProgress, [0.15, 0.25, 0.35], [0, 1, 0]);
+  const step3Active = useTransform(scrollYProgress, [0.30, 0.40, 0.50], [0, 1, 0]);
+  const step4Active = useTransform(scrollYProgress, [0.45, 0.55, 0.65], [0, 1, 0]);
+  const step5Active = useTransform(scrollYProgress, [0.60, 0.70, 0.80], [0, 1, 0]);
+  const step6Active = useTransform(scrollYProgress, [0.75, 0.85, 0.95], [0, 1, 0]);
 
   // The red glowing path drawing animation
   // Segmented to match the story
