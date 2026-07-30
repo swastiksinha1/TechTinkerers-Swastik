@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  STUDENT
+  TECHNICIAN
+  WARDEN
+  DEAN
+  ADMIN
+}
+
+enum ComplaintStatus {
+  PENDING
+  ASSIGNED
+  IN_PROGRESS
+  AWAITING_VERIFICATION
+  RESOLVED
+  ESCALATED
+  CLOSED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  role        Role     @default(STUDENT)
+  karmaPoints Int      @default(0) // Gamification: Reward points for reporting/resolving
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  reportedComplaints  Complaint[] @relation("ReportedBy")
+  assignedComplaints  Complaint[] @relation("AssignedTo")
+  auditLogs           AuditLog[]
+}
+
+model Location {
+  id          String   @id @default(uuid())
+  qrCodeId    String   @unique // For the physical QR sticker
+  name        String   // e.g., "Hostel A - Room 101 Tap"
+  description String?
+  department  String?  // e.g., "Plumbing", "Electrical"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  complaints  Complaint[]
+}
+
+model Complaint {
+  id          String          @id @default(uuid())
+  title       String
+  description String
+  status      ComplaintStatus @default(PENDING)
+  priority    Priority        @default(MEDIUM)
+  department  String?         // AI will categorize this automatically
+  aiAnalysis  Json?           // Storing AI reasoning/metadata
+  photoUrl    String?
+  rating      Int?            // 1-5 rating from student upon verification
+  
+  // SLA & Timers
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  deadline    DateTime?       // Expected resolution time
+  resolvedAt  DateTime?       // Actual resolution time
+
+  // Foreign Keys
+  reporterId  String
+  assigneeId  String?
+  locationId  String
+  
+  // Relations
+  reporter    User            @relation("ReportedBy", fields: [reporterId], references: [id])
+  assignee    User?           @relation("AssignedTo", fields: [assigneeId], references: [id])
+  location    Location        @relation(fields: [locationId], references: [id])
+  auditLogs   AuditLog[]
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  action      String   // e.g., "STATUS_CHANGED", "ESCALATED"
+  details     String   // JSON string or description
+  createdAt   DateTime @default(now())
+
+  // Foreign Keys
+  complaintId String
+  userId      String?  // Who made the change (if applicable)
+
+  // Relations
+  complaint   Complaint @relation(fields: [complaintId], references: [id])
+  user        User?     @relation(fields: [userId], references: [id])
+}
