@@ -13,7 +13,7 @@ const ProcessStep = ({ step, index, numSteps, processScroll }: { step: { title: 
   const opacity = useTransform(processScroll, [start, peak, end], [0, 1, 0]);
   const y = useTransform(processScroll, [start, peak, end], [80, 0, -80]);
   const scale = useTransform(processScroll, [start, peak, end], [0.85, 1, 0.85]);
-  const filter = useTransform(processScroll, [start, peak, end], ["blur(20px)", "blur(0px)", "blur(20px)"]);
+  const filter = useTransform(processScroll, [start, peak, end], ["blur(8px)", "blur(0px)", "blur(8px)"]);
 
   return (
     <motion.div 
