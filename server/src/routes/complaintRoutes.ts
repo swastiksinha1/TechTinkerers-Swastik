@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { smartCreateComplaint, resolveComplaint } from '../controllers/complaintController';
+import { smartCreateComplaint, resolveComplaint, confirmResolution } from '../controllers/complaintController';
 
 const router = Router();
 
@@ -10,5 +10,9 @@ router.post('/smart', smartCreateComplaint);
 // Endpoint for resolving a complaint and awarding karma points
 // POST /api/complaints/:id/resolve
 router.post('/:id/resolve', resolveComplaint);
+
+// Endpoint for confirming a resolution
+// POST /api/complaints/:id/confirm
+router.post('/:id/confirm', confirmResolution);
 
 export default router;

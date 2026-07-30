@@ -1,6 +1,13 @@
 import { Request, Response } from 'express';
 import prisma from '../db';
 import { analyzeComplaint } from './aiController';
+import crypto from 'crypto';
+
+// Helper for the Hash Chain Ledger
+function createLedgerHash(complaintId: string, action: string, details: string, previousHash: string | null): string {
+  const dataToHash = `${complaintId}:${action}:${details}:${previousHash || 'GENESIS'}`;
+  return crypto.createHash('sha256').update(dataToHash).digest('hex');
+}
 
 export const smartCreateComplaint = async (req: Request, res: Response) => {
   try {
@@ -44,7 +51,7 @@ export const smartCreateComplaint = async (req: Request, res: Response) => {
       case 'LOW': deadline.setDate(deadline.getDate() + 7); break; // 7 days
     }
 
-    // 3. Save structured ticket to DB
+    // 4. Save structured ticket to DB
     const complaint = await prisma.complaint.create({
       data: {
         title: aiAnalysis.title,
@@ -56,15 +63,22 @@ export const smartCreateComplaint = async (req: Request, res: Response) => {
         reporterId,
         locationId,
         aiAnalysis: JSON.stringify(aiAnalysis),
+        escalationLevel: 0, // Starts at Technician
       },
     });
 
-    // 4. Create an audit log
+    // 5. Blockchain-style Tamper-Evident Ledger (Genesis Block)
+    const action = 'CREATED_VIA_AI';
+    const details = 'Complaint was auto-categorized by AI Triage system';
+    const hash = createLedgerHash(complaint.id, action, details, null);
+
     await prisma.auditLog.create({
       data: {
-        action: 'CREATED_VIA_AI',
-        details: 'Complaint was auto-categorized by AI Triage system',
+        action,
+        details,
         complaintId: complaint.id,
+        hash,
+        previousHash: null
       },
     });
 
@@ -85,51 +99,101 @@ export const resolveComplaint = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Complaint not found' });
     }
 
-    if (complaint.status === 'RESOLVED' || complaint.status === 'CLOSED') {
-      return res.status(400).json({ error: 'Complaint is already resolved or closed' });
+    if (complaint.status === 'RESOLVED' || complaint.status === 'CLOSED' || complaint.status === 'AWAITING_VERIFICATION') {
+      return res.status(400).json({ error: 'Complaint is already resolved or awaiting verification' });
     }
 
-    // 1. Update Complaint status
+    // 1. Update Complaint status to AWAITING_VERIFICATION for Student Confirmation
     const updatedComplaint = await prisma.complaint.update({
       where: { id },
       data: {
-        status: 'RESOLVED',
+        status: 'AWAITING_VERIFICATION',
         resolvedAt: new Date(),
         rating,
       },
     });
 
-    // 2. Gamification: Award Karma Points
-    // 10 points to reporter for reporting a valid issue that got fixed
-    await prisma.user.update({
-      where: { id: complaint.reporterId },
-      data: { karmaPoints: { increment: 10 } },
+    // 2. Fetch the previous hash for the Tamper-Evident Ledger
+    const lastAudit = await prisma.auditLog.findFirst({
+      where: { complaintId: id },
+      orderBy: { createdAt: 'desc' }
     });
 
-    // 20 points to assignee for fixing it
+    const action = 'STATUS_CHANGED';
+    const details = `Technician marked as AWAITING_VERIFICATION. Rating input: ${rating || 'N/A'}`;
+    const previousHash = lastAudit?.hash || null;
+    const hash = createLedgerHash(id, action, details, previousHash);
+
+    // 3. Append to AuditLog chain
+    await prisma.auditLog.create({
+      data: {
+        action,
+        details,
+        complaintId: complaint.id,
+        hash,
+        previousHash
+      },
+    });
+
+    return res.status(200).json({ message: 'Complaint marked as awaiting student verification!', complaint: updatedComplaint });
+  } catch (error: any) {
+    console.error('Error resolving complaint:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const confirmResolution = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const complaint = await prisma.complaint.findUnique({ where: { id } });
+    if (!complaint) {
+      return res.status(404).json({ error: 'Complaint not found' });
+    }
+
+    if (complaint.status !== 'AWAITING_VERIFICATION') {
+      return res.status(400).json({ error: 'Complaint must be awaiting verification' });
+    }
+
+    // 1. Update status to RESOLVED
+    const updatedComplaint = await prisma.complaint.update({
+      where: { id },
+      data: { status: 'RESOLVED' }
+    });
+
+    // 2. Gamification: Award Karma Points
+    await prisma.user.update({
+      where: { id: complaint.reporterId },
+      data: { karmaPoints: { increment: 10 } }, // 10 pts to reporter
+    });
+
     if (complaint.assigneeId) {
       let pointsToAward = 20;
-      // Bonus points if rating is 5
-      if (rating === 5) pointsToAward += 10;
-      
+      if (complaint.rating === 5) pointsToAward += 10;
       await prisma.user.update({
         where: { id: complaint.assigneeId },
         data: { karmaPoints: { increment: pointsToAward } },
       });
     }
 
-    // 3. Audit Log
-    await prisma.auditLog.create({
-      data: {
-        action: 'RESOLVED_AND_GAMIFIED',
-        details: `Complaint resolved. Karma points awarded to reporter and assignee. Rating: ${rating || 'N/A'}`,
-        complaintId: complaint.id,
-      },
+    // 3. Append to Tamper-Evident Ledger
+    const lastAudit = await prisma.auditLog.findFirst({
+      where: { complaintId: id },
+      orderBy: { createdAt: 'desc' }
     });
 
-    return res.status(200).json({ message: 'Complaint resolved and points awarded!', complaint: updatedComplaint });
+    const action = 'STUDENT_CONFIRMED';
+    const details = 'Student verified resolution. Gamification points awarded.';
+    const previousHash = lastAudit?.hash || null;
+    const hash = createLedgerHash(id, action, details, previousHash);
+
+    await prisma.auditLog.create({
+      data: { action, details, complaintId: complaint.id, hash, previousHash },
+    });
+
+    return res.status(200).json({ message: 'Resolution verified!', complaint: updatedComplaint });
   } catch (error: any) {
-    console.error('Error resolving complaint:', error);
+    console.error('Error confirming resolution:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 };

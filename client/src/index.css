@@ -130,17 +130,18 @@ nav {
   animation: slideUp 0.5s ease-out forwards;
 }
 
-/* MapLibre Overrides */
-.maplibregl-map {
+/* Leaflet Overrides */
+.leaflet-container {
+  background: var(--bg-color);
   font-family: inherit;
 }
 
-.maplibregl-popup-content {
+.leaflet-popup-content-wrapper {
   background: transparent !important;
   padding: 0 !important;
   box-shadow: none !important;
 }
 
-.maplibregl-popup-tip {
+.leaflet-popup-tip {
   display: none !important;
 }

@@ -77,6 +77,7 @@ model Complaint {
   updatedAt   DateTime        @updatedAt
   deadline    DateTime?       // Expected resolution time
   resolvedAt  DateTime?       // Actual resolution time
+  escalationLevel Int         @default(0) // 0: Tech, 1: Warden, 2: Dean
 
   // Foreign Keys
   reporterId  String
@@ -95,6 +96,10 @@ model AuditLog {
   action      String   // e.g., "STATUS_CHANGED", "ESCALATED"
   details     String   // JSON string or description
   createdAt   DateTime @default(now())
+
+  // Blockchain/Ledger Fields
+  hash          String   // SHA-256 hash of this record
+  previousHash  String?  // Hash of the previous record in the chain
 
   // Foreign Keys
   complaintId String
