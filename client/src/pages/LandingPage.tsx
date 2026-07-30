@@ -3,35 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { TiltCard } from "@/components/unlumen-ui/tilt-card";
 
-import { HoverFeatureCards, type HoverFeatureCard } from "@/components/unlumen-ui/hover-feature-cards";
+import { StackedFeatureCards, type StackedFeatureCard } from "@/components/unlumen-ui/stacked-feature-cards";
 
-const featureItems: HoverFeatureCard[] = [
+const featureItems: StackedFeatureCard[] = [
   {
     name: "AI-Driven Routing",
-    description: "Our platform instantly analyzes QR scans and leverages smart routing to ping the exact on-duty technician nearest to your block.",
-    img: "/isometric_campus.png",
-    imgClassName: "absolute -bottom-20 left-1/2 -translate-x-1/2 object-cover opacity-60 mix-blend-multiply dark:mix-blend-lighten",
-    imgWidth: 400,
-    containerClassName: "h-full rounded-3xl",
-    fadeBottom: true,
+    description: "Speed is a necessity. Our platform instantly analyzes QR scans and leverages smart routing to ping the exact on-duty technician nearest to your block.",
+    icon: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
   },
   {
     name: "Tamper-Proof Verification",
-    description: "Every repair requires student confirmation. Immutable ledgers ensure staff logs and SLA timers can never be artificially altered.",
-    img: "/isometric_campus.png",
-    imgClassName: "absolute -bottom-20 left-1/2 -translate-x-1/2 object-cover opacity-60 mix-blend-multiply dark:mix-blend-lighten",
-    imgWidth: 400,
-    containerClassName: "h-full rounded-3xl",
-    fadeBottom: true,
+    description: "Accountability is built-in. Every repair requires student confirmation before it's marked complete. Immutable ledgers ensure staff logs and SLA timers can never be artificially altered.",
+    icon: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
   },
   {
     name: "Automated Escalation",
-    description: "From the student portal to the Dean's dashboard, everyone shares a single source of truth. Ignored requests instantly escalate.",
-    img: "/isometric_campus.png",
-    imgClassName: "absolute -bottom-20 left-1/2 -translate-x-1/2 object-cover opacity-60 mix-blend-multiply dark:mix-blend-lighten",
-    imgWidth: 400,
-    containerClassName: "h-full rounded-3xl",
-    fadeBottom: true,
+    description: "From the student portal to the Dean's dashboard, everyone shares a single source of truth. Time-triggered escalations ensure ignored requests instantly bypass low-level queues.",
+    icon: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
   }
 ];
 
@@ -139,28 +127,24 @@ const LandingPage = () => {
         </div>
       </div>
 
-      {/* 3. Features Section: Hover Feature Cards */}
+      {/* 3. Features Section: Stacked Feature Cards */}
       <div style={{ padding: '8rem 4rem', background: 'var(--surface-color)', position: 'relative', zIndex: 10, color: 'var(--text-primary)' }}>
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          style={{ maxWidth: '800px', marginBottom: '5rem' }}
+          style={{ maxWidth: '800px', marginBottom: '5rem', margin: '0 auto 2rem auto', textAlign: 'center' }}
         >
-          <h2 style={{ fontSize: '3.5rem', fontWeight: 900, marginBottom: '1.5rem', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+          <h2 style={{ fontSize: '4rem', fontWeight: 900, marginBottom: '1.5rem', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
             Engineered for modern campuses.
           </h2>
-          <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            CampusTriage isn't just a ticketing system. It's an intelligent ecosystem designed to enforce accountability and drastically reduce resolution times across hostels and academic blocks.
+          <p style={{ fontSize: '1.5rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+            CampusTriage isn't just a ticketing system. It's an intelligent ecosystem designed to enforce accountability and drastically reduce resolution times.
           </p>
         </motion.div>
         
-        <HoverFeatureCards
-          items={featureItems}
-          className="grid-cols-1 md:grid-cols-3 max-w-[1200px]"
-          renderLink={(href, children) => <a href={href}>{children}</a>}
-        />
+        <StackedFeatureCards items={featureItems} />
       </div>
 
       {/* 4. Massive Footer */}
