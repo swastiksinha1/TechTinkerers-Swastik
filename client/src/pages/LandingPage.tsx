@@ -3,6 +3,38 @@ import { useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { TiltCard } from "@/components/unlumen-ui/tilt-card";
 
+import { HoverFeatureCards, type HoverFeatureCard } from "@/components/unlumen-ui/hover-feature-cards";
+
+const featureItems: HoverFeatureCard[] = [
+  {
+    name: "AI-Driven Routing",
+    description: "Our platform instantly analyzes QR scans and leverages smart routing to ping the exact on-duty technician nearest to your block.",
+    img: "/isometric_campus.png",
+    imgClassName: "absolute -bottom-20 left-1/2 -translate-x-1/2 object-cover opacity-60 mix-blend-multiply dark:mix-blend-lighten",
+    imgWidth: 400,
+    containerClassName: "h-full rounded-3xl",
+    fadeBottom: true,
+  },
+  {
+    name: "Tamper-Proof Verification",
+    description: "Every repair requires student confirmation. Immutable ledgers ensure staff logs and SLA timers can never be artificially altered.",
+    img: "/isometric_campus.png",
+    imgClassName: "absolute -bottom-20 left-1/2 -translate-x-1/2 object-cover opacity-60 mix-blend-multiply dark:mix-blend-lighten",
+    imgWidth: 400,
+    containerClassName: "h-full rounded-3xl",
+    fadeBottom: true,
+  },
+  {
+    name: "Automated Escalation",
+    description: "From the student portal to the Dean's dashboard, everyone shares a single source of truth. Ignored requests instantly escalate.",
+    img: "/isometric_campus.png",
+    imgClassName: "absolute -bottom-20 left-1/2 -translate-x-1/2 object-cover opacity-60 mix-blend-multiply dark:mix-blend-lighten",
+    imgWidth: 400,
+    containerClassName: "h-full rounded-3xl",
+    fadeBottom: true,
+  }
+];
+
 const LandingPage = () => {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -107,7 +139,7 @@ const LandingPage = () => {
         </div>
       </div>
 
-      {/* 3. Features Section: Animated Grid */}
+      {/* 3. Features Section: Hover Feature Cards */}
       <div style={{ padding: '8rem 4rem', background: 'var(--surface-color)', position: 'relative', zIndex: 10, color: 'var(--text-primary)' }}>
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -124,82 +156,11 @@ const LandingPage = () => {
           </p>
         </motion.div>
         
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem' }}>
-          {/* Card 1: AI Routing */}
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }} 
-            whileInView={{ opacity: 1, y: 0 }} 
-            viewport={{ once: true, margin: "-50px" }} 
-            transition={{ duration: 0.6, delay: 0.1 }}
-            whileHover={{ y: -8, boxShadow: '0 20px 40px -15px rgba(0,0,0,0.05)', transition: { duration: 0.2 } }}
-            style={{ 
-              background: 'var(--bg-color)', 
-              border: '1px solid var(--border-color)', 
-              borderRadius: '24px', 
-              padding: '3rem 2.5rem',
-              cursor: 'default',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02)'
-            }}
-          >
-            <div style={{ width: '56px', height: '56px', marginBottom: '2rem', color: '#0ea5e9', background: '#e0f2fe', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            </div>
-            <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontWeight: 800, letterSpacing: '-0.01em' }}>AI-Driven Routing</h3>
-            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, fontSize: '1.05rem' }}>
-              Speed is a necessity. Our platform instantly analyzes QR scans and leverages smart routing to ping the exact on-duty technician nearest to your block, turning downtime into uptime.
-            </p>
-          </motion.div>
-
-          {/* Card 2: Tamper Proof */}
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }} 
-            whileInView={{ opacity: 1, y: 0 }} 
-            viewport={{ once: true, margin: "-50px" }} 
-            transition={{ duration: 0.6, delay: 0.2 }}
-            whileHover={{ y: -8, boxShadow: '0 20px 40px -15px rgba(0,0,0,0.05)', transition: { duration: 0.2 } }}
-            style={{ 
-              background: 'var(--bg-color)', 
-              border: '1px solid var(--border-color)', 
-              borderRadius: '24px', 
-              padding: '3rem 2.5rem',
-              cursor: 'default',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02)'
-            }}
-          >
-            <div style={{ width: '56px', height: '56px', marginBottom: '2rem', color: '#10b981', background: '#d1fae5', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            </div>
-            <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontWeight: 800, letterSpacing: '-0.01em' }}>Tamper-Proof Verification</h3>
-            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, fontSize: '1.05rem' }}>
-              Accountability is built-in. Every repair requires student confirmation before it's marked complete. Immutable ledgers ensure staff logs and SLA timers can never be artificially altered.
-            </p>
-          </motion.div>
-
-          {/* Card 3: Visibility */}
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }} 
-            whileInView={{ opacity: 1, y: 0 }} 
-            viewport={{ once: true, margin: "-50px" }} 
-            transition={{ duration: 0.6, delay: 0.3 }}
-            whileHover={{ y: -8, boxShadow: '0 20px 40px -15px rgba(0,0,0,0.05)', transition: { duration: 0.2 } }}
-            style={{ 
-              background: 'var(--bg-color)', 
-              border: '1px solid var(--border-color)', 
-              borderRadius: '24px', 
-              padding: '3rem 2.5rem',
-              cursor: 'default',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02)'
-            }}
-          >
-            <div style={{ width: '56px', height: '56px', marginBottom: '2rem', color: '#f59e0b', background: '#fef3c7', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            </div>
-            <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontWeight: 800, letterSpacing: '-0.01em' }}>Automated Escalation</h3>
-            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, fontSize: '1.05rem' }}>
-              From the student portal to the Dean's dashboard, everyone shares a single source of truth. Time-triggered escalations ensure ignored requests instantly bypass low-level queues.
-            </p>
-          </motion.div>
-        </div>
+        <HoverFeatureCards
+          items={featureItems}
+          className="grid-cols-1 md:grid-cols-3 max-w-[1200px]"
+          renderLink={(href, children) => <a href={href}>{children}</a>}
+        />
       </div>
 
       {/* 4. Massive Footer */}
