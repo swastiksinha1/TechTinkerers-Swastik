@@ -80,6 +80,7 @@ export const smartCreateComplaint = async (req: Request, res: Response) => {
         aiAnalysis: JSON.stringify(aiAnalysis),
         photoUrl: imageBase64 || null,
         escalationLevel: 0, // Starts at Technician
+        handshakePin: Math.floor(1000 + Math.random() * 9000).toString(),
       },
     });
 
@@ -146,6 +147,7 @@ export const manualCreateComplaint = async (req: Request, res: Response) => {
     const complaint = await prisma.complaint.create({
       data: {
         title, description, department, priority, status: 'ASSIGNED', deadline, reporterId, assigneeId, locationId, escalationLevel: 0, photoUrl: imageBase64 || null,
+        handshakePin: Math.floor(1000 + Math.random() * 9000).toString(),
       },
     });
 
@@ -376,6 +378,85 @@ export const upvoteComplaint = async (req: Request, res: Response) => {
     return res.status(200).json({ complaint: updatedComplaint, message: 'Upvoted successfully!' });
   } catch (error) {
     console.error('Error upvoting complaint:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const verifyPin = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { pin } = req.body;
+
+    const complaint = await prisma.complaint.findUnique({ where: { id } });
+    if (!complaint) return res.status(404).json({ error: 'Complaint not found' });
+
+    if (complaint.handshakePin !== pin) {
+      return res.status(401).json({ error: 'Invalid PIN' });
+    }
+
+    const updated = await prisma.complaint.update({
+      where: { id },
+      data: { handshakeVerified: true, lastActivityAt: new Date() }
+    });
+    return res.status(200).json({ message: 'Handshake successful', complaint: updated });
+  } catch (error) {
+    console.error('Error verifying PIN:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const logActivity = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+    const complaint = await prisma.complaint.update({
+      where: { id },
+      data: { lastActivityAt: new Date() }
+    });
+    return res.status(200).json({ message: 'Activity logged', complaint });
+  } catch (error) {
+    console.error('Error logging activity:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getLiveDashboardData = async (req: Request, res: Response) => {
+  try {
+    // 1. Recent Activity Ticker (Latest 20 Audit Logs)
+    const recentActivity = await prisma.auditLog.findMany({
+      take: 20,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        complaint: {
+          select: { title: true, priority: true, department: true, location: { select: { name: true } } }
+        }
+      }
+    });
+
+    // 2. Stats Aggregation
+    const pendingCount = await prisma.complaint.count({ where: { status: 'PENDING' } });
+    const activeCount = await prisma.complaint.count({ where: { status: { in: ['ASSIGNED', 'IN_PROGRESS', 'AWAITING_VERIFICATION'] } } });
+    const resolvedCount = await prisma.complaint.count({ where: { status: 'RESOLVED' } });
+    const escalatedCount = await prisma.complaint.count({ where: { status: 'ESCALATED' } });
+
+    // 3. Urgent Issues (Unresolved CRITICAL/HIGH priority)
+    const urgentIssues = await prisma.complaint.findMany({
+      where: {
+        status: { notIn: ['RESOLVED', 'CLOSED'] },
+        priority: { in: ['CRITICAL', 'HIGH'] }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+      include: { location: { select: { name: true } } }
+    });
+
+    return res.status(200).json({
+      recentActivity,
+      stats: { pending: pendingCount, active: activeCount, resolved: resolvedCount, escalated: escalatedCount },
+      urgentIssues
+    });
+  } catch (error) {
+    console.error('Error fetching live dashboard data:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 };

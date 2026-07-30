@@ -70,6 +70,47 @@ export const startEscalationCron = () => {
           });
         });
       }
+
+      // DEAD-MAN'S SWITCH LOGIC
+      const deadManTimeLimit = new Date(now.getTime() - 45 * 1000); // 45 seconds ago
+      const deadTickets = await prisma.complaint.findMany({
+        where: {
+          handshakeVerified: true,
+          status: { in: ['ASSIGNED', 'IN_PROGRESS', 'ESCALATED'] },
+          lastActivityAt: { lt: deadManTimeLimit }
+        }
+      });
+
+      for (const ticket of deadTickets) {
+        console.log(`[server]: Dead-Man's Switch activated for complaint ${ticket.id}. Unassigning...`);
+        await prisma.$transaction(async (tx) => {
+          await tx.complaint.update({
+            where: { id: ticket.id },
+            data: {
+              status: 'PENDING',
+              assigneeId: null,
+              handshakeVerified: false,
+              handshakePin: null, // Wipe the PIN
+              lastActivityAt: null,
+            }
+          });
+
+          const lastAudit = await tx.auditLog.findFirst({
+            where: { complaintId: ticket.id },
+            orderBy: { createdAt: 'desc' }
+          });
+
+          const action = 'DEAD_MAN_SWITCH_ACTIVATED';
+          const details = 'Technician was inactive for > 45 seconds. Ticket unassigned and routed back to queue.';
+          const previousHash = lastAudit?.hash || null;
+          const hash = createLedgerHash(ticket.id, action, details, previousHash);
+
+          await tx.auditLog.create({
+            data: { action, details, complaintId: ticket.id, hash, previousHash }
+          });
+        });
+      }
+
     } catch (error) {
       console.error('[server]: Error in Escalation Cron:', error);
     }

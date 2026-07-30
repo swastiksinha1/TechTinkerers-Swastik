@@ -44,6 +44,24 @@ export function TiltCard({
   className,
   ...props
 }: TiltCardProps) {
+  const innerRef = React.useRef<HTMLDivElement>(null);
+  const spotlightRef = React.useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!innerRef.current || !spotlightRef.current) return;
+    const rect = innerRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    spotlightRef.current.style.background = `radial-gradient(600px circle at ${x}px ${y}px, rgba(255,255,255,0.1), transparent 40%)`;
+  };
+
+  const handleMouseEnter = () => {
+    if (spotlightRef.current) spotlightRef.current.style.opacity = "1";
+  };
+  const handleMouseLeave = () => {
+    if (spotlightRef.current) spotlightRef.current.style.opacity = "0";
+  };
+
   const inner = (
     <Tilt
       rotationFactor={11}
@@ -57,13 +75,29 @@ export function TiltCard({
         className,
       )}
     >
-      <div className="flex flex-row transition-all duration-200 justify-between px-4 sm:px-6 py-4 sm:py-5">
-        <div className="flex flex-col gap-1 flex-1 mr-2">
-          <h2 className="text-lg tracking-tight leading-tight font-medium">
+      <div 
+        ref={innerRef}
+        onMouseMove={handleMouseMove}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        className="absolute inset-0 z-0 h-full w-full pointer-events-auto"
+      >
+        <div
+          ref={spotlightRef}
+          className="pointer-events-none absolute inset-0 z-0 transition-opacity duration-300"
+          style={{
+            opacity: 0,
+            background: `radial-gradient(600px circle at 50% 50%, rgba(255,255,255,0.1), transparent 40%)`,
+          }}
+        />
+      </div>
+      <div className="relative z-10 flex flex-row h-full transition-all duration-200 justify-between px-4 sm:px-6 py-4 sm:py-8 pointer-events-none">
+        <div className="flex flex-col gap-3 flex-1 mr-2 justify-center h-full">
+          <h2 className="text-2xl sm:text-3xl tracking-tight leading-tight font-black">
             {title}
           </h2>
           {description && (
-            <p className="text-foreground/50 text-sm">{description}</p>
+            <p className="opacity-95 text-base sm:text-lg font-bold">{description}</p>
           )}
           {children && <div className="mt-2">{children}</div>}
         </div>

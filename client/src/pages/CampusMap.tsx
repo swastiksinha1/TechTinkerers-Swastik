@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -40,28 +40,34 @@ const getColor = (status: string) => {
   return '#10b981';
 };
 
-const createCustomIcon = (status: string) => {
+const createCustomIcon = (status: string, name: string) => {
   const color = getColor(status);
   return L.divIcon({
     className: 'custom-leaflet-icon',
     html: `
-      <div style="
-        width: 36px; 
-        height: 36px; 
-        background: ${color}22; 
-        border: 2px solid ${color}; 
-        border-radius: 50%; 
-        display: flex; 
-        justify-content: center; 
-        align-items: center; 
-        box-shadow: 0 4px 12px ${color}66;
-        animation: pulse 2s infinite;
-      ">
-        <div style="width: 12px; height: 12px; background: ${color}; border-radius: 50%;"></div>
+      <div style="display: flex; flex-direction: column; align-items: center; width: 150px; margin-left: -75px; margin-top: -18px;">
+        <div style="
+          width: 36px; 
+          height: 36px; 
+          background: ${color}22; 
+          border: 2px solid ${color}; 
+          border-radius: 50%; 
+          display: flex; 
+          justify-content: center; 
+          align-items: center; 
+          box-shadow: 0 4px 12px ${color}66;
+          animation: pulse 2s infinite;
+          margin-bottom: 6px;
+        ">
+          <div style="width: 12px; height: 12px; background: ${color}; border-radius: 50%;"></div>
+        </div>
+        <div style="background: rgba(255,255,255,0.9); padding: 4px 8px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11px; font-weight: 800; letter-spacing: 0.05em; color: #0f172a; white-space: nowrap; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-transform: uppercase;">
+          ${name}
+        </div>
       </div>
     `,
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
+    iconSize: [0, 0],
+    iconAnchor: [0, 0],
     popupAnchor: [0, -18]
   });
 };
@@ -99,7 +105,7 @@ const CampusMap = () => {
           <MapContainer 
             center={[23.0755, 76.8485]} 
             zoom={16} 
-            style={{ height: '100%', width: '100%', background: '#e2e8f0' }}
+            style={{ height: '100%', width: '100%', background: '#f8fafc' }}
           >
             <TileLayer
               url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
@@ -112,7 +118,7 @@ const CampusMap = () => {
                 <Marker 
                   key={loc.id} 
                   position={[loc.lat, loc.lng]}
-                  icon={createCustomIcon(status)}
+                  icon={createCustomIcon(status, loc.name)}
                 >
                   <Popup minWidth={300}>
                     <div style={{ padding: '0', background: '#ffffff', color: '#0f172a' }}>

@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { CheckCircle, AlertTriangle, Search, Link as LinkIcon, MessageSquare, Clock, Key, ShieldAlert } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { CheckCircle, AlertTriangle, Search, Link as LinkIcon, MessageSquare, Clock, Key, ShieldAlert, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { Variants } from 'framer-motion';
+import { toast } from 'sonner';
 
 const TechnicianDashboard = () => {
   const [complaintId, setComplaintId] = useState('');
   const [complaint, setComplaint] = useState<any>(null);
   const [ledger, setLedger] = useState<any[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [timeLeft, setTimeLeft] = useState<string>('');
 
   // Handshake & Dead-Man's Switch Mock State
@@ -28,7 +29,7 @@ const TechnicianDashboard = () => {
         setLedger(data2.logs);
         
         // Reset local states for the new ticket
-        setIsVerified(false);
+        setIsVerified(data1.complaint.handshakeVerified || false);
         setPinInput('');
         setDeadManSeconds(45);
         setIsDead(false);
@@ -38,28 +39,6 @@ const TechnicianDashboard = () => {
       return false;
     } catch (e) {
       console.error(e);
-      // Mock Data if Backend fails (Since DB is unreachable)
-      if (id === '123') {
-        setComplaint({
-          id: '123',
-          title: 'Sparking Outlet in Room 4B',
-          department: 'Electrical',
-          priority: 'CRITICAL',
-          description: 'The wall outlet is sparking when I plug in my laptop.',
-          status: 'ASSIGNED',
-          escalationLevel: 0,
-          deadline: new Date(Date.now() + 1000 * 60 * 60 * 2).toISOString() // 2 hours from now
-        });
-        setLedger([
-          { id: '1', createdAt: new Date().toISOString(), action: 'TICKET_CREATED', details: 'Student submitted issue via AI Triage', hash: 'abc123hash', previousHash: 'GENESIS' },
-          { id: '2', createdAt: new Date().toISOString(), action: 'AUTO_ASSIGNED', details: 'Smart routed to Technician John Doe', hash: 'def456hash', previousHash: 'abc123hash' }
-        ]);
-        setIsVerified(false);
-        setPinInput('');
-        setDeadManSeconds(45);
-        setIsDead(false);
-        return true;
-      }
       return false;
     }
   };
@@ -68,41 +47,65 @@ const TechnicianDashboard = () => {
     e.preventDefault();
     if (!complaintId) return;
     setIsProcessing(true);
-    setMessage(null);
     
     const found = await fetchComplaintDetails(complaintId);
     if (!found) {
-      setMessage({ type: 'error', text: 'Complaint not found. Try UUID "123" for demo.' });
+      toast.error('Complaint not found.');
       setComplaint(null);
       setLedger([]);
+    } else {
+      toast.success('Ticket loaded.');
     }
     setIsProcessing(false);
   };
 
-  const handleVerifyPin = () => {
-    // In production, this would call the backend to verify the PIN
-    if (pinInput === '1234') { // Mock correct PIN
-      setIsVerified(true);
-      setMessage({ type: 'success', text: 'Handshake successful. Ticket unlocked.' });
-    } else {
-      setMessage({ type: 'error', text: 'Invalid PIN. Please ask the student for the correct code.' });
+  const handleVerifyPin = async () => {
+    if (!complaint) return;
+    try {
+      const res = await fetch(`/api/complaints/${complaint.id}/verify-pin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: pinInput })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setIsVerified(true);
+        setDeadManSeconds(45);
+        setIsDead(false);
+        toast.success('Handshake successful. Ticket unlocked.');
+      } else {
+        toast.error(data.error || 'Invalid PIN.');
+      }
+    } catch (e) {
+      toast.error('Error verifying PIN.');
     }
   };
 
-  const handleLogActivity = () => {
-    // Resets the Dead-Man's Switch timer
-    setDeadManSeconds(45);
-    setMessage({ type: 'success', text: 'Activity logged. Inactivity timer reset.' });
+  const handleLogActivity = async () => {
+    if (!complaint) return;
+    try {
+      const res = await fetch(`/api/complaints/${complaint.id}/log-activity`, { method: 'POST' });
+      if (res.ok) {
+        setDeadManSeconds(45);
+        toast.success('Activity logged. Inactivity timer reset.');
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to log activity.');
+    }
   };
 
-  // Dead-Man's Switch Timer
+  // Dead-Man's Switch Timer (Frontend Demo Countdown)
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setTimeout>;
     if (isVerified && !isDead && complaint?.status !== 'RESOLVED') {
       interval = setInterval(() => {
         setDeadManSeconds(prev => {
           if (prev <= 1) {
             setIsDead(true);
+            // Auto refresh to show it was unassigned by backend
+            fetchComplaintDetails(complaint.id);
+            toast.error("Dead-Man's Switch triggered! Ticket unassigned.", { duration: 5000 });
             return 0;
           }
           return prev - 1;
@@ -135,8 +138,8 @@ const TechnicianDashboard = () => {
     return () => clearInterval(interval);
   }, [complaint]);
 
-  const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
-  const itemVariants = { hidden: { opacity: 0, y: 30 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 80 } } };
+  const containerVariants: Variants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
+  const itemVariants: Variants = { hidden: { opacity: 0, y: 30 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 80 } } };
 
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="show" style={{ maxWidth: '1000px', margin: '0 auto', paddingTop: '4rem', paddingBottom: '6rem' }}>
@@ -185,16 +188,6 @@ const TechnicianDashboard = () => {
             {isProcessing ? 'Searching...' : 'Search'}
           </motion.button>
         </form>
-
-        <AnimatePresence>
-          {message && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto', marginBottom: '3rem' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
-              <div style={{ padding: '1.5rem 2rem', background: message.type === 'success' ? '#f0fdf4' : '#fef2f2', border: `1px solid ${message.type === 'success' ? '#86efac' : '#fecaca'}`, borderRadius: '8px', color: message.type === 'success' ? '#166534' : '#991b1b', fontSize: '1.1rem', fontWeight: 600 }}>
-                {message.text}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         <AnimatePresence>
           {complaint && (

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Sparkles, Send, CheckCircle, Camera, Star, PenTool, Bot } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { PinnedList } from "@/components/unlumen-ui/pinned-list";
 import { ShoppingBag01Icon as ShoppingBag } from "hugeicons-react";
+import { toast } from 'sonner';
 
 interface AIResult {
   title: string;
@@ -11,6 +12,22 @@ interface AIResult {
   priority: string;
   analysis: string;
 }
+
+const TypewriterText = ({ text }: { text: string }) => {
+  const [displayed, setDisplayed] = useState('');
+  
+  useEffect(() => {
+    let i = 0;
+    const interval = setInterval(() => {
+      setDisplayed(text.substring(0, i));
+      i++;
+      if (i > text.length) clearInterval(interval);
+    }, 15);
+    return () => clearInterval(interval);
+  }, [text]);
+
+  return <span>{displayed}</span>;
+};
 
 const StudentPortal = () => {
   const [complaintText, setComplaintText] = useState('');
@@ -40,27 +57,6 @@ const StudentPortal = () => {
       }
     } catch (e) {
       console.error(e);
-      // Fallback Mock Data since DB is unreachable for demo
-      setMyTickets([
-        {
-          id: '123',
-          title: 'Sparking Outlet in Room 4B',
-          department: 'Electrical',
-          priority: 'CRITICAL',
-          description: 'The wall outlet is sparking when I plug in my laptop.',
-          status: 'ASSIGNED',
-          createdAt: new Date().toISOString()
-        },
-        {
-          id: '456',
-          title: 'Leaking Sink',
-          department: 'Plumbing',
-          priority: 'MEDIUM',
-          description: 'Sink in the 2nd floor bathroom is leaking water onto the floor.',
-          status: 'AWAITING_VERIFICATION',
-          createdAt: new Date().toISOString()
-        }
-      ]);
     }
   };
 
@@ -86,6 +82,7 @@ const StudentPortal = () => {
 
     setIsSubmitting(true);
     setResult(null);
+    toast.info('AI is analyzing your report...', { id: 'ai-triage' });
 
     try {
       const response = await fetch('/api/complaints/smart', {
@@ -101,12 +98,13 @@ const StudentPortal = () => {
         setImageFile(null);
         setImagePreview(null);
         fetchMyTickets(); 
+        toast.success('Smart Triage Complete!', { id: 'ai-triage' });
       } else {
-        alert('Failed to submit: ' + (data.error || 'Unknown error'));
+        toast.error('Failed to submit: ' + (data.error || 'Unknown error'), { id: 'ai-triage' });
       }
     } catch (error) {
       console.error(error);
-      alert('Error submitting');
+      toast.error('Error submitting report.', { id: 'ai-triage' });
     } finally {
       setIsSubmitting(false);
     }
@@ -118,6 +116,7 @@ const StudentPortal = () => {
 
     setIsSubmitting(true);
     setResult(null);
+    const toastId = toast.loading('Submitting ticket...');
 
     try {
       const response = await fetch('/api/complaints/manual', {
@@ -144,12 +143,13 @@ const StudentPortal = () => {
         setManualTitle('');
         setComplaintText('');
         fetchMyTickets(); 
+        toast.success('Ticket Submitted Successfully!', { id: toastId });
       } else {
-        alert('Failed to submit: ' + (data.error || 'Unknown error'));
+        toast.error('Failed to submit: ' + (data.error || 'Unknown error'), { id: toastId });
       }
     } catch (error) {
       console.error(error);
-      alert('Error submitting');
+      toast.error('Error submitting ticket.', { id: toastId });
     } finally {
       setIsSubmitting(false);
     }
@@ -157,6 +157,7 @@ const StudentPortal = () => {
 
   const handleConfirmResolution = async (ticketId: string) => {
     const rating = ratingInput[ticketId] || 5;
+    const toastId = toast.loading('Verifying resolution...');
     try {
       const response = await fetch(`/api/complaints/${ticketId}/confirm`, {
         method: 'POST',
@@ -164,15 +165,18 @@ const StudentPortal = () => {
         body: JSON.stringify({ rating }),
       });
       if (response.ok) {
-        alert('Resolution verified! You have been awarded 10 Karma Points.');
+        toast.success('Resolution verified! You earned 10 Karma Points.', { id: toastId });
         fetchMyTickets();
       } else {
-        alert('Failed to verify.');
+        toast.error('Failed to verify.', { id: toastId });
       }
     } catch (e) {
       console.error(e);
+      toast.error('Error verifying resolution.', { id: toastId });
     }
   };
+
+
 
   return (
     <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: "easeOut" }} style={{ maxWidth: '800px', margin: '0 auto', paddingTop: '4rem', paddingBottom: '4rem' }}>
@@ -200,6 +204,8 @@ const StudentPortal = () => {
 
       <form onSubmit={entryMode === 'AI' ? handleAiSubmit : handleManualSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '4rem' }}>
         
+
+
         {entryMode === 'MANUAL' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '1rem' }}>
             <input 
@@ -243,15 +249,15 @@ const StudentPortal = () => {
           style={{ resize: 'vertical', fontSize: '1.25rem', padding: '1.5rem', background: '#ffffff', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}
         />
         
-        {entryMode === 'AI' && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {entryMode === 'AI' && (
             <motion.label whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-button outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', flex: 1, justifyContent: 'center' }}>
               <Camera size={20} />
               {imageFile ? 'Change Photo' : 'Attach Photo (Optional)'}
               <input type="file" accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} disabled={isSubmitting} />
             </motion.label>
-          </div>
-        )}
+          )}
+        </div>
 
         <AnimatePresence>
           {imagePreview && entryMode === 'AI' && (
@@ -278,7 +284,7 @@ const StudentPortal = () => {
         </motion.button>
       </form>
 
-      {/* Result Display & Tickets List remains identical */}
+      {/* Result Display & Tickets List */}
       <AnimatePresence>
         {result && (
           <motion.div initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} style={{ marginBottom: '4rem', padding: '2.5rem', background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '12px' }}>
@@ -291,7 +297,9 @@ const StudentPortal = () => {
               <div style={{ display: 'flex', alignItems: 'center', fontSize: '1.1rem' }}>
                 <strong>Priority:</strong> <span style={{ marginLeft: '1rem', padding: '0.5rem 1.25rem', background: result.priority === 'CRITICAL' ? '#fee2e2' : '#fef3c7', color: result.priority === 'CRITICAL' ? '#991b1b' : '#92400e', border: `1px solid ${result.priority === 'CRITICAL' ? '#fecaca' : '#fde68a'}`, borderRadius: '999px', fontSize: '1rem', fontWeight: 'bold' }}>{result.priority}</span>
               </div>
-              <div style={{ color: '#374151', fontSize: '1.1rem', marginTop: '1rem', fontStyle: 'italic', padding: '1.5rem', background: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>"{result.analysis}"</div>
+              <div style={{ color: '#374151', fontSize: '1.1rem', marginTop: '1rem', fontStyle: 'italic', padding: '1.5rem', background: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                "<TypewriterText text={result.analysis} />"
+              </div>
             </div>
           </motion.div>
         )}
@@ -308,24 +316,24 @@ const StudentPortal = () => {
               name: ticket.title,
               icon: <ShoppingBag size={18} />,
               subtitle: (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%', marginTop: '0.25rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ padding: '0.25rem 0.75rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 700, background: ticket.status === 'AWAITING_VERIFICATION' ? '#fef08a' : (ticket.status === 'RESOLVED' ? '#bbf7d0' : '#e2e8f0'), color: ticket.status === 'AWAITING_VERIFICATION' ? '#854d0e' : (ticket.status === 'RESOLVED' ? '#166534' : '#475569') }}>
+                    <span style={{ padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.05em', background: ticket.status === 'AWAITING_VERIFICATION' ? '#fef08a' : (ticket.status === 'RESOLVED' ? '#bbf7d0' : '#f1f5f9'), color: ticket.status === 'AWAITING_VERIFICATION' ? '#854d0e' : (ticket.status === 'RESOLVED' ? '#166534' : '#475569') }}>
                       {ticket.status.replace('_', ' ')}
                     </span>
-                    <span>· {ticket.department}</span>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#94a3b8' }}>· {ticket.department}</span>
                   </div>
-                  <p style={{ color: 'var(--text-secondary)' }}>{ticket.description}</p>
+                  <p style={{ color: '#475569', fontSize: '0.9rem', lineHeight: 1.4, margin: '0.25rem 0' }}>{ticket.description}</p>
                   
                   {/* DUAL HANDSHAKE PIN DISPLAY */}
                   {(ticket.status === 'ASSIGNED' || ticket.status === 'IN_PROGRESS') && (
-                    <div style={{ marginTop: '1rem', padding: '1rem', background: '#eff6ff', border: '1px dashed #3b82f6', borderRadius: '8px', width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <h4 style={{ margin: '0 0 0.25rem 0', color: '#1e3a8a', fontSize: '0.9rem', textTransform: 'uppercase' }}>Handshake PIN</h4>
-                        <p style={{ margin: 0, color: '#1e40af', fontSize: '0.85rem' }}>Give this code to the technician when they arrive.</p>
+                    <div style={{ marginTop: '0.75rem', padding: '0.75rem 1rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.02)' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                        <h4 style={{ margin: 0, color: '#0f172a', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.05em' }}>VERIFICATION PIN</h4>
+                        <p style={{ margin: 0, color: '#64748b', fontSize: '0.75rem', fontWeight: 500 }}>Share with technician</p>
                       </div>
-                      <div style={{ background: '#ffffff', padding: '0.5rem 1rem', borderRadius: '4px', border: '1px solid #bfdbfe', fontSize: '1.5rem', fontWeight: 900, letterSpacing: '0.2em', color: '#2563eb' }}>
-                        1234
+                      <div style={{ background: '#ffffff', padding: '0.4rem 0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '1.1rem', fontWeight: 900, letterSpacing: '0.15em', color: '#0f172a', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                        {ticket.handshakePin || '---'}
                       </div>
                     </div>
                   )}
