@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import Map, { Marker, Popup, Layer, Source } from 'react-map-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import Map, { Marker, Popup } from 'react-map-gl/maplibre';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import { AlertCircle, CheckCircle, Info, MapPin } from 'lucide-react';
-
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
 // Real images from the internet (Unsplash placeholders representing college blocks)
 // Replace these URLs with exact VIT Bhopal image URLs!
@@ -30,29 +28,6 @@ const locations = [
   { id: 'e1', name: 'Main Campus Eatery', type: 'Eatery', lat: 23.0752, lng: 76.8485, img: images.eatery },
 ];
 
-const buildingLayer: any = {
-  id: '3d-buildings',
-  source: 'composite',
-  'source-layer': 'building',
-  filter: ['==', 'extrude', 'true'],
-  type: 'fill-extrusion',
-  minzoom: 15,
-  paint: {
-    'fill-extrusion-color': '#2a3b5c',
-    'fill-extrusion-height': [
-      'interpolate', ['linear'], ['zoom'],
-      15, 0,
-      15.05, ['get', 'height']
-    ],
-    'fill-extrusion-base': [
-      'interpolate', ['linear'], ['zoom'],
-      15, 0,
-      15.05, ['get', 'min_height']
-    ],
-    'fill-extrusion-opacity': 0.8
-  }
-};
-
 const CampusMap = () => {
   const [popupInfo, setPopupInfo] = useState<any>(null);
 
@@ -68,34 +43,12 @@ const CampusMap = () => {
     return '#10b981'; // Green
   };
 
-  if (!MAPBOX_TOKEN || MAPBOX_TOKEN === 'paste_your_free_mapbox_token_here') {
-    return (
-      <div className="animate-slide-up" style={{ padding: '2rem', textAlign: 'center' }}>
-        <div className="glass-panel" style={{ padding: '3rem', maxWidth: '600px', margin: '0 auto' }}>
-          <AlertCircle size={48} color="var(--warning)" style={{ margin: '0 auto 1rem' }} />
-          <h2>Mapbox Token Required</h2>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-            To render the high-performance 3D buildings, you need to add your free Mapbox API token.
-          </p>
-          <div style={{ textAlign: 'left', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px' }}>
-            <ol>
-              <li>Go to <strong>mapbox.com</strong> and create a free account.</li>
-              <li>Copy your Default Public Token (starts with <code>pk.</code>).</li>
-              <li>Open <code>client/.env</code> and paste it there.</li>
-              <li>Restart the frontend server.</li>
-            </ol>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="animate-slide-up" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h2 style={{ margin: 0 }}>VIT Bhopal 3D Command Center</h2>
-          <p style={{ color: 'var(--text-secondary)', margin: '0.5rem 0 0 0' }}>Hold Right-Click and drag to rotate the 3D map</p>
+          <p style={{ color: 'var(--text-secondary)', margin: '0.5rem 0 0 0' }}>Hold Right-Click and drag to rotate the map. No API key required!</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <span style={{ color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><CheckCircle size={16}/> Clear</span>
@@ -113,11 +66,8 @@ const CampusMap = () => {
             pitch: 60,
             bearing: -20
           }}
-          mapStyle="mapbox://styles/mapbox/dark-v11"
-          mapboxAccessToken={MAPBOX_TOKEN}
+          mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
         >
-          <Layer {...buildingLayer} />
-
           {locations.map((loc) => {
             const status = getHealthStatus(loc.id);
             const color = getColor(status);

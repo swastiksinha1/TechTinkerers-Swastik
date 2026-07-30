@@ -130,17 +130,17 @@ nav {
   animation: slideUp 0.5s ease-out forwards;
 }
 
-/* Mapbox Overrides */
-.mapboxgl-map {
+/* MapLibre Overrides */
+.maplibregl-map {
   font-family: inherit;
 }
 
-.mapboxgl-popup-content {
+.maplibregl-popup-content {
   background: transparent !important;
   padding: 0 !important;
   box-shadow: none !important;
 }
 
-.mapboxgl-popup-tip {
+.maplibregl-popup-tip {
   display: none !important;
 }
