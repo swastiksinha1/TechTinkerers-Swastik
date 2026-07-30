@@ -69,7 +69,18 @@ Report → Auto-route → Resolve → Escalate (if needed) → Confirm → Close
 
 ---
 
-## 📂 Project Structure (planned)
+## 📂 Project Structure
+
+Current layout in the repository:
+
+```
+TechTinkerers-Swastik/
+├── client/                 # Frontend application
+├── server/                 # Backend application
+└── README.md
+```
+
+Planned expansion as the project grows:
 
 ```
 campus-grievance-tracker/
@@ -96,41 +107,24 @@ git clone https://github.com/swastiksinha1/TechTinkerers-Swastik.git
 cd TechTinkerers-Swastik
 ```
 
-### Backend — Ticket Engine
+### Server
 
 ```bash
-cd backend/ticket-engine
+cd server
 npm install
 cp .env.example .env          # configure DB, Redis, API keys
 npm run dev
 ```
 
-### Backend — Analytics
+### Client
 
 ```bash
-cd ../analytics
-python -m venv venv
-source venv/bin/activate      # or `venv\Scripts\activate` on Windows
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
-```
-
-### Frontend — Admin Web
-
-```bash
-cd frontend/admin-web
+cd client
 npm install
 npm start
 ```
 
-### Mobile PWA — Flutter
-
-```bash
-cd frontend/pwa
-flutter pub get
-flutter run
-```
+> As additional services (analytics, mobile PWA, blockchain ledger, etc.) are added, their setup steps will be documented here.
 
 ---
 
@@ -176,6 +170,7 @@ flutter run
 </div>
 ---
 
+
 ## ⚠️ Risks & Mitigations
 
 | Risk | Mitigation |
@@ -190,3 +185,8 @@ flutter run
 ## 📄 License
 
 Distributed under the MIT License. See `LICENSE` for more information.
+
+
+
+
+
