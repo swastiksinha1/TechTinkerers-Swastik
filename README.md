@@ -46,6 +46,8 @@ All status changes are cryptographically timestamped in a **hash-chained Escalat
 <img src="assets/2.png" width="90%" />
 <br/><br/>
 <img src="assets/3.png" width="90%" />
+<br/><br/>
+<img src="assets/4.png" width="90%" />
 </div>
 
 <img src="https://capsule-render.vercel.app/api?type=rect&color=0:10002b,100:3c096c&height=3&width=100%" width="100%"/>
