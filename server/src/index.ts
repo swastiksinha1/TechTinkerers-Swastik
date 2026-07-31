@@ -16,9 +16,13 @@ app.get('/api/health', (req: Request, res: Response) => {
 });
 
 import complaintRoutes from './routes/complaintRoutes';
+import { startEscalationCron } from './cron';
 
 // Mount routes
 app.use('/api/complaints', complaintRoutes);
+
+// Start background jobs
+startEscalationCron();
 
 app.listen(port, () => {
   console.log(`[server]: Server is running at http://localhost:${port}`);

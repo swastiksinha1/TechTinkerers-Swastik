@@ -13,14 +13,15 @@ export interface SmartComplaintAnalysis {
   analysis: string;
 }
 
-export const analyzeComplaint = async (text: string): Promise<SmartComplaintAnalysis> => {
+export const analyzeComplaint = async (text: string, imageBase64?: string): Promise<SmartComplaintAnalysis> => {
   if (!process.env.GEMINI_API_KEY) {
     throw new Error('GEMINI_API_KEY is missing from environment variables');
   }
 
-  const prompt = `
+  const promptText = `
     You are an intelligent triage assistant for a university campus maintenance system.
     Analyze the following user complaint and extract the core issue.
+    If an image is provided, inspect the image to determine the severity and department.
     Categorize the department it belongs to (e.g., Plumbing, Electrical, IT, Carpentry, Cleaning, General).
     Assign a priority (LOW, MEDIUM, HIGH, CRITICAL) based on the severity. Sparking wires, massive leaks, or security issues are CRITICAL.
     Create a concise, professional title for the ticket.
@@ -29,10 +30,32 @@ export const analyzeComplaint = async (text: string): Promise<SmartComplaintAnal
     Complaint: "${text}"
   `;
 
+  // Construct the contents array for multimodal request
+  const contents: any[] = [promptText];
+
+  if (imageBase64) {
+    // Determine mime type from base64 string prefix if present, else default to jpeg
+    let mimeType = 'image/jpeg';
+    let base64Data = imageBase64;
+    
+    if (imageBase64.startsWith('data:image/')) {
+      const parts = imageBase64.split(';');
+      mimeType = parts[0].split(':')[1];
+      base64Data = parts[1].split(',')[1];
+    }
+
+    contents.push({
+      inlineData: {
+        data: base64Data,
+        mimeType: mimeType
+      }
+    });
+  }
+
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: prompt,
+      contents: contents,
       config: {
         responseMimeType: 'application/json',
         responseSchema: {

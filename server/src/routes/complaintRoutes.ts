@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { smartCreateComplaint, resolveComplaint } from '../controllers/complaintController';
+import { smartCreateComplaint, manualCreateComplaint, resolveComplaint, confirmResolution, getComplaintLedger, getStudentComplaints, getComplaint, getPublicFeed, upvoteComplaint, verifyPin, logActivity, getLiveDashboardData } from '../controllers/complaintController';
 
 const router = Router();
 
@@ -7,8 +7,48 @@ const router = Router();
 // POST /api/complaints/smart
 router.post('/smart', smartCreateComplaint);
 
+// Endpoint for manual ticket submission
+// POST /api/complaints/manual
+router.post('/manual', manualCreateComplaint);
+
+// Endpoint for Live Dashboard
+// GET /api/complaints/live-dashboard
+router.get('/live-dashboard', getLiveDashboardData);
+
+// Endpoint for public feed
+// GET /api/complaints/public
+router.get('/public', getPublicFeed);
+
+// Endpoint to upvote a complaint
+// POST /api/complaints/:id/upvote
+router.post('/:id/upvote', upvoteComplaint);
+
 // Endpoint for resolving a complaint and awarding karma points
 // POST /api/complaints/:id/resolve
 router.post('/:id/resolve', resolveComplaint);
+
+// Endpoint for confirming a resolution
+// POST /api/complaints/:id/confirm
+router.post('/:id/confirm', confirmResolution);
+
+// Endpoint to verify Handshake PIN
+// POST /api/complaints/:id/verify-pin
+router.post('/:id/verify-pin', verifyPin);
+
+// Endpoint to log activity for Dead-Man's Switch
+// POST /api/complaints/:id/log-activity
+router.post('/:id/log-activity', logActivity);
+
+// Endpoint to fetch Tamper-Evident Ledger
+// GET /api/complaints/:id/ledger
+router.get('/:id/ledger', getComplaintLedger);
+
+// Endpoint to fetch student's active complaints
+// GET /api/complaints/student/:reporterId
+router.get('/student/:reporterId', getStudentComplaints);
+
+// Endpoint to fetch single complaint details
+// GET /api/complaints/:id
+router.get('/:id', getComplaint);
 
 export default router;

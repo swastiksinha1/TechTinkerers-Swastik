@@ -1,12 +1,10 @@
-import React, { useState } from 'react';
-import Map, { Marker, Popup, Layer, Source } from 'react-map-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import { AlertCircle, CheckCircle, Info, MapPin } from 'lucide-react';
 
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { AlertCircle, CheckCircle, Info } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-// Real images from the internet (Unsplash placeholders representing college blocks)
-// Replace these URLs with exact VIT Bhopal image URLs!
 const images = {
   boys: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=400',
   girls: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&q=80&w=400',
@@ -16,169 +14,139 @@ const images = {
 
 const locations = [
   { id: 'b1', name: 'Boys Block 1', type: 'Boys', lat: 23.0760, lng: 76.8480, img: images.boys },
-  { id: 'b2', name: 'Boys Block 2', type: 'Boys', lat: 23.0762, lng: 76.8485, img: images.boys },
-  { id: 'b3', name: 'Boys Block 3', type: 'Boys', lat: 23.0764, lng: 76.8475, img: images.boys },
-  { id: 'b4', name: 'Boys Block 4', type: 'Boys', lat: 23.0766, lng: 76.8482, img: images.boys },
-  { id: 'b5', name: 'Boys Block 5', type: 'Boys', lat: 23.0758, lng: 76.8472, img: images.boys },
-  { id: 'b6', name: 'Boys Block 6', type: 'Boys', lat: 23.0768, lng: 76.8478, img: images.boys },
-  { id: 'b7', name: 'Boys Block 7', type: 'Boys', lat: 23.0770, lng: 76.8484, img: images.boys },
-  { id: 'b8', name: 'Boys Block 8', type: 'Boys', lat: 23.0772, lng: 76.8476, img: images.boys },
-  { id: 'g1', name: 'Girls Block 1', type: 'Girls', lat: 23.0745, lng: 76.8510, img: images.girls },
-  { id: 'g2', name: 'Girls Block 2', type: 'Girls', lat: 23.0748, lng: 76.8515, img: images.girls },
-  { id: 'a1', name: 'Academic Block 1', type: 'Academic', lat: 23.0755, lng: 76.8497, img: images.academic },
-  { id: 'a2', name: 'Academic Block 2', type: 'Academic', lat: 23.0750, lng: 76.8500, img: images.academic },
-  { id: 'e1', name: 'Main Campus Eatery', type: 'Eatery', lat: 23.0752, lng: 76.8485, img: images.eatery },
+  { id: 'b2', name: 'Boys Block 2', type: 'Boys', lat: 23.0763, lng: 76.8488, img: images.boys },
+  { id: 'b3', name: 'Boys Block 3', type: 'Boys', lat: 23.0766, lng: 76.8472, img: images.boys },
+  { id: 'b4', name: 'Boys Block 4', type: 'Boys', lat: 23.0769, lng: 76.8485, img: images.boys },
+  { id: 'b5', name: 'Boys Block 5', type: 'Boys', lat: 23.0755, lng: 76.8470, img: images.boys },
+  { id: 'b6', name: 'Boys Block 6', type: 'Boys', lat: 23.0772, lng: 76.8478, img: images.boys },
+  { id: 'b7', name: 'Boys Block 7', type: 'Boys', lat: 23.0775, lng: 76.8487, img: images.boys },
+  { id: 'b8', name: 'Boys Block 8', type: 'Boys', lat: 23.0778, lng: 76.8475, img: images.boys },
+  { id: 'g1', name: 'Girls Block 1', type: 'Girls', lat: 23.0740, lng: 76.8515, img: images.girls },
+  { id: 'g2', name: 'Girls Block 2', type: 'Girls', lat: 23.0745, lng: 76.8522, img: images.girls },
+  { id: 'a1', name: 'Academic Block 1', type: 'Academic', lat: 23.0752, lng: 76.8500, img: images.academic },
+  { id: 'a2', name: 'Academic Block 2', type: 'Academic', lat: 23.0748, lng: 76.8505, img: images.academic },
+  { id: 'e1', name: 'Main Campus Eatery', type: 'Eatery', lat: 23.0750, lng: 76.8485, img: images.eatery },
 ];
 
-const buildingLayer: any = {
-  id: '3d-buildings',
-  source: 'composite',
-  'source-layer': 'building',
-  filter: ['==', 'extrude', 'true'],
-  type: 'fill-extrusion',
-  minzoom: 15,
-  paint: {
-    'fill-extrusion-color': '#2a3b5c',
-    'fill-extrusion-height': [
-      'interpolate', ['linear'], ['zoom'],
-      15, 0,
-      15.05, ['get', 'height']
-    ],
-    'fill-extrusion-base': [
-      'interpolate', ['linear'], ['zoom'],
-      15, 0,
-      15.05, ['get', 'min_height']
-    ],
-    'fill-extrusion-opacity': 0.8
-  }
+const getHealthStatus = (id: string) => {
+  if (id === 'b3' || id === 'a1') return 'CRITICAL';
+  if (id === 'g1' || id === 'e1') return 'MEDIUM';
+  return 'CLEAR';
+};
+
+const getColor = (status: string) => {
+  if (status === 'CRITICAL') return '#ef4444';
+  if (status === 'MEDIUM') return '#f59e0b';
+  return '#10b981';
+};
+
+const createCustomIcon = (status: string, name: string) => {
+  const color = getColor(status);
+  return L.divIcon({
+    className: 'custom-leaflet-icon',
+    html: `
+      <div style="display: flex; flex-direction: column; align-items: center; width: 150px; margin-left: -75px; margin-top: -18px;">
+        <div style="
+          width: 36px; 
+          height: 36px; 
+          background: ${color}22; 
+          border: 2px solid ${color}; 
+          border-radius: 50%; 
+          display: flex; 
+          justify-content: center; 
+          align-items: center; 
+          box-shadow: 0 4px 12px ${color}66;
+          animation: pulse 2s infinite;
+          margin-bottom: 6px;
+        ">
+          <div style="width: 12px; height: 12px; background: ${color}; border-radius: 50%;"></div>
+        </div>
+        <div style="background: rgba(255,255,255,0.9); padding: 4px 8px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11px; font-weight: 800; letter-spacing: 0.05em; color: #0f172a; white-space: nowrap; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-transform: uppercase;">
+          ${name}
+        </div>
+      </div>
+    `,
+    iconSize: [0, 0],
+    iconAnchor: [0, 0],
+    popupAnchor: [0, -18]
+  });
 };
 
 const CampusMap = () => {
-  const [popupInfo, setPopupInfo] = useState<any>(null);
-
-  const getHealthStatus = (id: string) => {
-    if (id === 'b3' || id === 'a1') return 'CRITICAL';
-    if (id === 'g1' || id === 'e1') return 'MEDIUM';
-    return 'CLEAR';
-  };
-
-  const getColor = (status: string) => {
-    if (status === 'CRITICAL') return '#ef4444'; // Red
-    if (status === 'MEDIUM') return '#f59e0b'; // Yellow
-    return '#10b981'; // Green
-  };
-
-  if (!MAPBOX_TOKEN || MAPBOX_TOKEN === 'paste_your_free_mapbox_token_here') {
-    return (
-      <div className="animate-slide-up" style={{ padding: '2rem', textAlign: 'center' }}>
-        <div className="glass-panel" style={{ padding: '3rem', maxWidth: '600px', margin: '0 auto' }}>
-          <AlertCircle size={48} color="var(--warning)" style={{ margin: '0 auto 1rem' }} />
-          <h2>Mapbox Token Required</h2>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-            To render the high-performance 3D buildings, you need to add your free Mapbox API token.
-          </p>
-          <div style={{ textAlign: 'left', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px' }}>
-            <ol>
-              <li>Go to <strong>mapbox.com</strong> and create a free account.</li>
-              <li>Copy your Default Public Token (starts with <code>pk.</code>).</li>
-              <li>Open <code>client/.env</code> and paste it there.</li>
-              <li>Restart the frontend server.</li>
-            </ol>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="animate-slide-up" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <motion.div 
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '2rem', paddingTop: '2rem', paddingBottom: '4rem' }}
+    >
+      <div className="glass-panel" style={{ padding: '3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h2 style={{ margin: 0 }}>VIT Bhopal 3D Command Center</h2>
-          <p style={{ color: 'var(--text-secondary)', margin: '0.5rem 0 0 0' }}>Hold Right-Click and drag to rotate the 3D map</p>
+          <h2 className="section-heading" style={{ margin: 0, fontSize: '2.5rem' }}>
+            Campus Radar.
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', margin: '0.5rem 0 0 0', fontSize: '1.25rem', fontWeight: 600 }}>Real-time 2D surveillance feed.</p>
         </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <span style={{ color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><CheckCircle size={16}/> Clear</span>
-          <span style={{ color: 'var(--warning)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Info size={16}/> Warning</span>
-          <span style={{ color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><AlertCircle size={16}/> Critical</span>
+        <div style={{ display: 'flex', gap: '2rem', background: '#f1f5f9', padding: '1.5rem 2rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+          <span style={{ color: '#16a34a', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800, fontSize: '1.1rem' }}><CheckCircle size={24}/> Clear</span>
+          <span style={{ color: '#d97706', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800, fontSize: '1.1rem' }}><Info size={24}/> Warning</span>
+          <span style={{ color: '#dc2626', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800, fontSize: '1.1rem' }}><AlertCircle size={24}/> Critical</span>
         </div>
       </div>
 
-      <div className="glass-panel" style={{ height: '70vh', width: '100%', overflow: 'hidden', borderRadius: '16px' }}>
-        <Map
-          initialViewState={{
-            longitude: 76.8497,
-            latitude: 23.0755,
-            zoom: 16,
-            pitch: 60,
-            bearing: -20
-          }}
-          mapStyle="mapbox://styles/mapbox/dark-v11"
-          mapboxAccessToken={MAPBOX_TOKEN}
-        >
-          <Layer {...buildingLayer} />
-
-          {locations.map((loc) => {
-            const status = getHealthStatus(loc.id);
-            const color = getColor(status);
+      <motion.div 
+        initial={{ y: 40, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.3, type: 'spring', stiffness: 80 }}
+        className="glass-panel" 
+        style={{ height: '70vh', width: '100%', overflow: 'hidden', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '1rem', background: '#ffffff' }}
+      >
+        <div style={{ width: '100%', height: '100%', borderRadius: '8px', overflow: 'hidden' }}>
+          <MapContainer 
+            center={[23.0755, 76.8485]} 
+            zoom={16} 
+            style={{ height: '100%', width: '100%', background: '#f8fafc' }}
+          >
+            <TileLayer
+              url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+              attribution='&copy; OpenStreetMap &copy; CARTO'
+            />
             
-            return (
-              <Marker 
-                key={loc.id} 
-                longitude={loc.lng} 
-                latitude={loc.lat} 
-                anchor="bottom"
-                onClick={e => {
-                  e.originalEvent.stopPropagation();
-                  setPopupInfo({ ...loc, status, color });
-                }}
-              >
-                <div style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <div style={{ 
-                    width: '40px', height: '40px', 
-                    background: `${color}33`, // 20% opacity
-                    border: `2px solid ${color}`,
-                    borderRadius: '50%',
-                    display: 'flex', justifyContent: 'center', alignItems: 'center',
-                    boxShadow: `0 0 15px ${color}`
-                  }}>
-                    <MapPin color={color} size={24} />
-                  </div>
-                </div>
-              </Marker>
-            );
-          })}
-
-          {popupInfo && (
-            <Popup
-              anchor="top"
-              longitude={popupInfo.lng}
-              latitude={popupInfo.lat}
-              onClose={() => setPopupInfo(null)}
-              closeOnClick={false}
-              className="dark-popup"
-            >
-              <div style={{ width: '220px', padding: '0.5rem', background: '#1e293b', color: 'white', borderRadius: '8px' }}>
-                <img 
-                  src={popupInfo.img} 
-                  alt={popupInfo.name} 
-                  style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '4px', marginBottom: '8px' }} 
-                />
-                <h3 style={{ margin: '0 0 4px 0', fontSize: '1.1rem' }}>{popupInfo.name}</h3>
-                <p style={{ margin: 0, fontSize: '0.9rem', color: '#94a3b8', fontWeight: 'bold' }}>
-                  Status: <span style={{ color: popupInfo.color }}>{popupInfo.status}</span>
-                </p>
-                {popupInfo.status !== 'CLEAR' && (
-                  <p style={{ margin: '8px 0 0 0', fontSize: '0.85rem', color: '#cbd5e1' }}>
-                    Active complaints detected. Technician required.
-                  </p>
-                )}
-              </div>
-            </Popup>
-          )}
-        </Map>
-      </div>
-    </div>
+            {locations.map((loc) => {
+              const status = getHealthStatus(loc.id);
+              return (
+                <Marker 
+                  key={loc.id} 
+                  position={[loc.lat, loc.lng]}
+                  icon={createCustomIcon(status, loc.name)}
+                >
+                  <Popup minWidth={300}>
+                    <div style={{ padding: '0', background: '#ffffff', color: '#0f172a' }}>
+                      <img 
+                        src={loc.img} 
+                        alt={loc.name} 
+                        style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '4px 4px 0 0' }} 
+                      />
+                      <div style={{ padding: '1.5rem' }}>
+                        <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem', fontWeight: 800 }}>{loc.name}</h3>
+                        <p style={{ margin: 0, fontSize: '1rem', color: '#64748b', fontWeight: 600 }}>
+                          Status: <span style={{ color: getColor(status), padding: '0.2rem 0.75rem', borderRadius: '4px', background: `${getColor(status)}22` }}>{status}</span>
+                        </p>
+                        {status !== 'CLEAR' && (
+                          <p style={{ margin: '1rem 0 0 0', fontSize: '1rem', color: '#dc2626', lineHeight: 1.5, borderTop: '1px solid #e2e8f0', paddingTop: '1rem', fontWeight: 600 }}>
+                            ⚠️ Active complaints detected. Technician required immediately.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            })}
+          </MapContainer>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 };
 
