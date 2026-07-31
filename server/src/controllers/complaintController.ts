@@ -37,7 +37,6 @@ export const smartCreateComplaint = async (req: Request, res: Response) => {
       update: {},
       create: {
         id: locationId,
-        qrCodeId: `qr_${locationId}`,
         name: `Room / Area ${locationId}`
       }
     });
@@ -123,7 +122,7 @@ export const manualCreateComplaint = async (req: Request, res: Response) => {
     await prisma.location.upsert({
       where: { id: locationId },
       update: {},
-      create: { id: locationId, qrCodeId: `qr_${locationId}`, name: `Room / Area ${locationId}` }
+      create: { id: locationId, name: `Room / Area ${locationId}` }
     });
 
     // 2. Instant Routing

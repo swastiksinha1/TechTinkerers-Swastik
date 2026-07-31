@@ -51,7 +51,6 @@ model User {
 
 model Location {
   id          String   @id @default(uuid())
-  qrCodeId    String   @unique // For the physical QR sticker
   name        String   // e.g., "Hostel A - Room 101 Tap"
   description String?
   department  String?  // e.g., "Plumbing", "Electrical"
