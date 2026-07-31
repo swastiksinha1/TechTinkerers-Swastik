@@ -1,6 +1,5 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:10002b,100:3c096c&height=220&section=header&text=CampusTriage&fontSize=60&fontColor=c77dff&fontAlignY=38&desc=Campus%20Grievance%20Redressal%20%26%20Maintenance%20Tracker&descAlignY=58&descSize=20&descAlign=50&animation=fadeIn" width="100%" />
 
 <img src="assets/image.png" alt="Design2Code 2.0 Banner" width="100%" />
 
