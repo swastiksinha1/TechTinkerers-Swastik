@@ -1,4 +1,8 @@
-# 📋 Campus Grievance Redressal and Maintenance Tracker
+<div align="center">
+  <img src="assets/image.png" alt="Design2Code 2.0 Banner" width="100%" />
+</div>
+
+# Campus Grievance Redressal and Maintenance Tracker
 
 > An end-to-end ticket management system for hostels, mess, and academic blocks.
 > **One ticket ID, one accountable owner, one visible timeline** — no complaints get lost.
@@ -21,7 +25,32 @@ All status changes are cryptographically timestamped in a **hash-chained Escalat
 
 ## 🔗 Live Demo
 
-🔜 **Pilot deployment in progress** — the live URL will be added here once available.
+**tech-tinkerers-swastik.vercel.app/**
+
+---
+
+> ## Preview
+
+<div align="center">
+
+![Desktop](assets/1.png)
+
+</div>
+</br>
+
+<div align="center">
+
+![Desktop](assets/2.png)
+
+</div>
+</br>
+
+<div align="center">
+
+![Desktop](assets/3.png)
+
+</div>
+</br>
 
 ---
 
