@@ -186,7 +186,7 @@ npm run dev
 
 | Role | What they can do |
 |---|---|
-| 🧑🎓 **Students** | File complaints, attach media, track status on portal, upvote public feed issues, and confirm resolution to earn Karma. |
+| 🎓 **Students** | File complaints, attach media, track status on portal, upvote public feed issues, and confirm resolution to earn Karma. |
 | 🛠️ **Technicians** | View assigned tickets in the technician dashboard; update status for resolution. |
 | 🏢 **Admins / Wardens**| View the Live NOC dashboard for SLAs and the Campus Heatmap. |
 
