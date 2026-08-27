@@ -1,7 +1,0 @@
-{
-  "name": "dsa-tracker",
-  "private": true,
-  "scripts": {
-    "build": "cd client && npm install && npm run build && cp -r dist ../public"
-  }
-}
